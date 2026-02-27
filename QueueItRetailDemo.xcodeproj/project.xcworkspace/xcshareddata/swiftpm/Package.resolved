@@ -1,0 +1,15 @@
+{
+  "originHash" : "72cb34f84d8242c345a41286a7dfa18680db0ed2f414d4ce9622545cf38c0fe4",
+  "pins" : [
+    {
+      "identity" : "ios-swift-sdk",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/queueit/ios-swift-sdk.git",
+      "state" : {
+        "revision" : "98feb7e0a8015c4fd255d8016950421f331c599c",
+        "version" : "1.0.0"
+      }
+    }
+  ],
+  "version" : 3
+}
