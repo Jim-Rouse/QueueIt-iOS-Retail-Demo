@@ -30,7 +30,7 @@ struct MainAppView: View {
                 Group {
                     switch currentScreen {
                     case .home:        HomeView()
-                    case .login:       LoginView(queueManager: queueManager)
+                    case .login:       LogInRepresentable(queueManager: queueManager, currentScreen: $currentScreen)
                     case .productList: ProductListView(queueManager: queueManager)
                     case .settings:    SettingsView()
                     case .userState:   UserStateView()
@@ -112,4 +112,18 @@ struct BottomButton: View {
             .foregroundColor(current == screen ? Color(hex: "00C853") : .gray)
         }
     }
+}
+
+struct LogInRepresentable: UIViewControllerRepresentable {
+    @ObservedObject var queueManager: QueueManager   // ← Add this
+    @Binding var currentScreen: AppScreen
+
+    func makeUIViewController(context: Context) -> LogInViewController {
+        let vc = LogInViewController()
+        vc.queueManager = queueManager               // ← Pass the shared manager
+        vc.goHomeClosure = { currentScreen = .home } // ← Auto-return on expiry
+        return vc
+    }
+
+    func updateUIViewController(_ uiViewController: LogInViewController, context: Context) {}
 }

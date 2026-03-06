@@ -69,7 +69,7 @@ class QueueManager: ObservableObject, QueueListener {
     
     // MARK: - QueueListener
     func onQueuePassed(_ info: QueuePassedInfo) {
-        print("✅ Queue passed! Token: \(info.queueItToken)")
+        print("✅ Queue passed! Token: \(String(describing: info.queueItToken))")
         // You can persist the token here if needed for future API calls
     }
     

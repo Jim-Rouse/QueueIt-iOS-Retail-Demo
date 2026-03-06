@@ -13,7 +13,7 @@ struct ProductListView: View {
     
     let products = [
         ("Wireless Headphones", "$129", "headphones"),
-        ("Smart Watch Pro", "$349", "watch"),
+        ("Smart Watch", "$349", "applewatch"),
         ("Premium Sneakers", "$89", "shoe"),
         ("Organic Cotton Tee", "$39", "tshirt")
     ]
