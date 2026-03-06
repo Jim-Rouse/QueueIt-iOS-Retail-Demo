@@ -5,31 +5,30 @@
 //  Created by James Rouse on 2/26/26.
 //
 
-
 import SwiftUI
+
+struct Product: Codable {
+    let name: String
+    let price: String
+    let icon: String
+}
 
 struct ProductListView: View {
     @ObservedObject var queueManager: QueueManager
-    
-    let products = [
-        ("Wireless Headphones", "$129", "headphones"),
-        ("Smart Watch", "$349", "applewatch"),
-        ("Premium Sneakers", "$89", "shoe"),
-        ("Organic Cotton Tee", "$39", "tshirt")
-    ]
+    @State private var products: [Product] = []
     
     var body: some View {
         List {
-            ForEach(products, id: \.0) { name, price, icon in
+            ForEach(products, id: \.name) { product in
                 HStack {
-                    Image(systemName: icon)
+                    Image(systemName: product.icon)
                         .font(.largeTitle)
                         .frame(width: 60)
                     
                     VStack(alignment: .leading) {
-                        Text(name)
+                        Text(product.name)
                             .font(.headline)
-                        Text(price)
+                        Text(product.price)
                             .foregroundColor(.secondary)
                     }
                     
@@ -45,5 +44,25 @@ struct ProductListView: View {
             }
         }
         .navigationTitle("Shop")
+        .onAppear {
+            Task {
+                await fetchProducts()
+            }
+        }
+    }
+    
+    private func fetchProducts() async {
+        do {
+            guard let url = URL(string: "https://retail.queue-it-demo.com/api/productList.json") else {
+                print("Invalid URL")
+                return
+            }
+            
+            let (data, _) = try await URLSession.shared.data(from: url)
+            products = try JSONDecoder().decode([Product].self, from: data)
+        } catch {
+            print("Error fetching products: \(error.localizedDescription)")
+            // For production, you might want to show an alert or retry button
+        }
     }
 }
