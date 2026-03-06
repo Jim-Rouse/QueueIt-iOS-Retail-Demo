@@ -22,138 +22,92 @@ class LogInViewController: UIViewController {
     var goHomeClosure: (() -> Void)?
     
     // MARK: - UI Elements
-    private var activatingLabel: UILabel!
-    private var countdownLabel: UILabel!
-    private var countdownTimer: Timer?
-    private var remainingTime: Int = 60
+    private var statusLabel: UILabel!
     
     // Combine subscription to watch QueueManager's showWebView
     private var cancellables = Set<AnyCancellable>()
-    private var wasShowingWebView = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         setupUI()
-        activateWaitingRoom()
-        observeQueueWebViewState()
+        observeQueueState()
+        handleLoginFlow()
     }
     
     private func setupUI() {
         view.backgroundColor = .systemBackground
         
-        // Activating label (shown while waiting room is active)
-        activatingLabel = UILabel()
-        activatingLabel.text = "Activating Queue-it Waiting Room..."
-        activatingLabel.font = UIFont.boldSystemFont(ofSize: 20)
-        activatingLabel.textAlignment = .center
-        activatingLabel.textColor = UIColor(hex: "00C853") // Queue-it green
-        activatingLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(activatingLabel)
-        
-        // Countdown label (hidden until queue passed)
-        countdownLabel = UILabel()
-        countdownLabel.text = "00:60"
-        countdownLabel.font = UIFont.systemFont(ofSize: 48, weight: .bold)
-        countdownLabel.textAlignment = .center
-        countdownLabel.textColor = UIColor(hex: "00C853")
-        countdownLabel.isHidden = true
-        countdownLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(countdownLabel)
+        // Status label (replaces activatingLabel and welcomeLabel – shown in center)
+        statusLabel = UILabel()
+        statusLabel.font = UIFont.boldSystemFont(ofSize: 20)
+        statusLabel.textAlignment = .center
+        statusLabel.textColor = UIColor(hex: "00C853") // Queue-it green
+        statusLabel.numberOfLines = 0
+        statusLabel.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(statusLabel)
         
         NSLayoutConstraint.activate([
-            activatingLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            activatingLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            
-            countdownLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            countdownLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+            statusLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            statusLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
         
-        // Retail-feel welcome text (optional – appears with countdown)
-        let welcomeLabel = UILabel()
-        welcomeLabel.text = "Welcome back!\nYour session is now active."
-        welcomeLabel.font = UIFont.systemFont(ofSize: 17)
-        welcomeLabel.textAlignment = .center
-        welcomeLabel.numberOfLines = 0
-        welcomeLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(welcomeLabel)
+        // Optional: Add a person icon above for retail/login feel (as in original LoginView.swift)
+        let iconImage = UIImage(systemName: "person.crop.circle.badge.checkmark")
+        let iconView = UIImageView(image: iconImage)
+        iconView.tintColor = UIColor(hex: "00C853")
+        iconView.contentMode = .scaleAspectFit
+        iconView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(iconView)
         
         NSLayoutConstraint.activate([
-            welcomeLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            welcomeLabel.topAnchor.constraint(equalTo: countdownLabel.bottomAnchor, constant: 24)
+            iconView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            iconView.bottomAnchor.constraint(equalTo: statusLabel.topAnchor, constant: -40),
+            iconView.widthAnchor.constraint(equalToConstant: 120),
+            iconView.heightAnchor.constraint(equalToConstant: 120)
         ])
     }
     
-    private func activateWaitingRoom() {
-        guard let manager = queueManager else {
+    private func handleLoginFlow() {
+        guard let manager = queueManager,
+              !manager.customerID.isEmpty,
+              !manager.waitingRoomID.isEmpty else {
             showMissingSettingsAlert()
             return
         }
         
-        // Use the shared QueueManager (exactly as Settings → Login flow already does)
-        // This triggers createEngine() + run() + fullScreenCover web view in MainAppView
-        manager.activateWaitingRoom()
+        if manager.sessionActive {
+            updateStatusToWelcome()
+        } else {
+            statusLabel.text = "NO ACTIVE SESSION!"
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                self.statusLabel.text = "Activating Queue-it Waiting Room..."
+                manager.activateWaitingRoom()
+            }
+        }
     }
     
-    private func observeQueueWebViewState() {
+    private func observeQueueState() {
+        queueManager?.$sessionActive
+            .receive(on: RunLoop.main)
+            .sink { [weak self] isActive in
+                if isActive {
+                    self?.updateStatusToWelcome()
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Optional: Hide status during web view (though fullScreenCover overlays anyway)
         queueManager?.$showWebView
             .receive(on: RunLoop.main)
             .sink { [weak self] isShowing in
-                guard let self = self else { return }
-                
-                // When the web view disappears → user has passed the queue (or queue disabled)
-                if self.wasShowingWebView && !isShowing {
-                    self.activatingLabel.isHidden = true
-                    self.countdownLabel.isHidden = false
-                    self.startCountdownTimer()
-                }
-                
-                self.wasShowingWebView = isShowing
+                self?.statusLabel.isHidden = isShowing
             }
             .store(in: &cancellables)
     }
     
-    // MARK: - Countdown Timer (exactly as you requested)
-    private func startCountdownTimer() {
-        remainingTime = 60
-        updateCountdownLabel()
-        
-        countdownTimer?.invalidate()
-        countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
-            self.remainingTime -= 1
-            self.updateCountdownLabel()
-            
-            if self.remainingTime <= 0 {
-                self.countdownTimer?.invalidate()
-                self.countdownTimer = nil
-                self.showSessionExpiredModal()
-            }
-        }
-    }
-    
-    private func updateCountdownLabel() {
-        let minutes = remainingTime / 60
-        let seconds = remainingTime % 60
-        countdownLabel.text = String(format: "%02d:%02d", minutes, seconds)
-    }
-    
-    private func showSessionExpiredModal() {
-        let alert = UIAlertController(
-            title: "Session Expired",
-            message: "Your 60-second demo session has timed out.\nReturning to Home.",
-            preferredStyle: .alert
-        )
-        present(alert, animated: true)
-        
-        // d. Wait 5 seconds then navigate back to Home
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) { [weak self] in
-            alert.dismiss(animated: true) {
-                self?.goHomeClosure?()          // Switches currentScreen = .home in SwiftUI
-                // Fallback for pure UIKit navigation
-                self?.navigationController?.popToRootViewController(animated: true)
-            }
-        }
+    private func updateStatusToWelcome() {
+        statusLabel.text = "Welcome back!\nYour session is active."
     }
     
     private func showMissingSettingsAlert() {
@@ -169,7 +123,6 @@ class LogInViewController: UIViewController {
     }
     
     deinit {
-        countdownTimer?.invalidate()
         cancellables.removeAll()
     }
 }

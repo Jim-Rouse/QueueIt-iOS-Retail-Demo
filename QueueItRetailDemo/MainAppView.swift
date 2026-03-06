@@ -41,6 +41,14 @@ struct MainAppView: View {
                 // Custom bottom bar (only 2 buttons as requested)
                 VStack {
                     Spacer()
+                    
+                    if queueManager.sessionActive {
+                        Text(String(format: "%02d:%02d", queueManager.remainingTime / 60, queueManager.remainingTime % 60))
+                            .font(.title2.bold())
+                            .foregroundColor(Color(hex: "00C853"))
+                            .padding(.bottom, 8)
+                    }
+                    
                     CustomBottomBar(currentScreen: $currentScreen)
                 }
             }
@@ -76,6 +84,16 @@ struct MainAppView: View {
             MenuView(currentScreen: $currentScreen)
         }
         .environmentObject(queueManager)
+        .onChange(of: queueManager.navigateToHome) { newValue in
+            if newValue {
+                currentScreen = .home
+                queueManager.navigateToHome = false
+            }
+        }
+        .alert("Session Expired", isPresented: $queueManager.showSessionExpired) {} message: {
+            Text("Your session has timed out.")
+        }
+        
     }
 }
 

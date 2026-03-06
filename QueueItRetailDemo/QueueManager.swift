@@ -17,8 +17,15 @@ class QueueManager: ObservableObject, QueueListener {
     @Published var showError = false
     @Published var errorMessage = ""
     
+    // NEW: Session state management
+    @Published var sessionActive: Bool = false
+    @Published var remainingTime: Int = 0
+    @Published var showSessionExpired: Bool = false
+    @Published var navigateToHome: Bool = false
+    
     private var engine: QueueItEngine?
     private var cancellables = Set<AnyCancellable>()
+    private var sessionTimer: Timer?
     
     // MARK: - Config from UserDefaults
     var customerID: String { UserDefaults.standard.string(forKey: "customerID") ?? "" }
@@ -71,6 +78,11 @@ class QueueManager: ObservableObject, QueueListener {
     func onQueuePassed(_ info: QueuePassedInfo) {
         print("✅ Queue passed! Token: \(String(describing: info.queueItToken))")
         // You can persist the token here if needed for future API calls
+        
+        // Start session timer
+        DispatchQueue.main.async { [weak self] in
+            self?.startSessionTimer()
+        }
     }
     
     func onError(_ error: QueueError, errorMessage: String) {
@@ -83,11 +95,42 @@ class QueueManager: ObservableObject, QueueListener {
         showError = true
     }
     
+    func onQueueDisabled(_ info: QueueDisabledInfo) {
+        // Treat as passed for demo (proceed with session)
+        DispatchQueue.main.async { [weak self] in
+            self?.startSessionTimer()
+        }
+    }
+    
     // Default empty implementations for the rest
     func onQueueViewWillOpen() {}
-    func onQueueDisabled(_ info: QueueDisabledInfo) {}
     func onWebViewClosed() {}
     func onSessionRestart() {}
     func onQueueUrlChanged(url: URL) {}
     func onSSLError(errorMessage: String) {}
+    
+    // NEW: Session Timer Logic
+    private func startSessionTimer() {
+        sessionActive = true
+        remainingTime = 60
+        sessionTimer?.invalidate()
+        sessionTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            self.remainingTime -= 1
+            if self.remainingTime <= 0 {
+                self.sessionTimer?.invalidate()
+                self.sessionTimer = nil
+                self.handleSessionExpiry()
+            }
+        }
+    }
+    
+    private func handleSessionExpiry() {
+        sessionActive = false
+        showSessionExpired = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) { [weak self] in
+            self?.showSessionExpired = false
+            self?.navigateToHome = true
+        }
+    }
 }
