@@ -12,11 +12,6 @@ struct HomeView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 40) {
-                Image("queueit-logo")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 80)
-                    .opacity(0.15)
                 
                 Text("Welcome to Queue-it Retail Demo")
                     .font(.largeTitle.bold())

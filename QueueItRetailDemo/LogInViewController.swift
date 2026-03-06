@@ -23,6 +23,9 @@ class LogInViewController: UIViewController {
     
     // MARK: - UI Elements
     private var statusLabel: UILabel!
+    private var usernameField: UITextField!
+    private var passwordField: UITextField!
+    private var logInButton: UIButton!
     
     // Combine subscription to watch QueueManager's showWebView
     private var cancellables = Set<AnyCancellable>()
@@ -47,9 +50,53 @@ class LogInViewController: UIViewController {
         statusLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(statusLabel)
         
+        // Username field (hidden until active session)
+        usernameField = UITextField()
+        usernameField.placeholder = "User Name"
+        usernameField.borderStyle = .roundedRect
+        usernameField.autocapitalizationType = .none
+        usernameField.autocorrectionType = .no
+        usernameField.translatesAutoresizingMaskIntoConstraints = false
+        usernameField.isHidden = true
+        view.addSubview(usernameField)
+        
+        // Password field (hidden until active session)
+        passwordField = UITextField()
+        passwordField.placeholder = "Password"
+        passwordField.borderStyle = .roundedRect
+        passwordField.isSecureTextEntry = true
+        passwordField.translatesAutoresizingMaskIntoConstraints = false
+        passwordField.isHidden = true
+        view.addSubview(passwordField)
+        
+        // Log In button (hidden until active session, styled with Queue-it green)
+        logInButton = UIButton(type: .system)
+        logInButton.setTitle("Log In", for: .normal)
+        logInButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
+        logInButton.backgroundColor = UIColor(hex: "00C853")
+        logInButton.setTitleColor(.white, for: .normal)
+        logInButton.layer.cornerRadius = 8
+        logInButton.translatesAutoresizingMaskIntoConstraints = false
+        logInButton.isHidden = true
+        logInButton.addTarget(self, action: #selector(handleLogInTap), for: .touchUpInside)
+        view.addSubview(logInButton)
+        
         NSLayoutConstraint.activate([
             statusLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            statusLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+            statusLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -100),  // Shift up for fields/button
+            
+            usernameField.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            usernameField.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 40),
+            usernameField.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
+            
+            passwordField.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            passwordField.topAnchor.constraint(equalTo: usernameField.bottomAnchor, constant: 20),
+            passwordField.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.8),
+            
+            logInButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            logInButton.topAnchor.constraint(equalTo: passwordField.bottomAnchor, constant: 20),
+            logInButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.6),
+            logInButton.heightAnchor.constraint(equalToConstant: 50)
         ])
         
         // Optional: Add a person icon above for retail/login feel (as in original LoginView.swift)
@@ -80,6 +127,9 @@ class LogInViewController: UIViewController {
             updateStatusToWelcome()
         } else {
             statusLabel.text = "NO ACTIVE SESSION!"
+            usernameField.isHidden = true
+            passwordField.isHidden = true
+            logInButton.isHidden = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                 self.statusLabel.text = "Activating Queue-it Waiting Room..."
                 manager.activateWaitingRoom()
@@ -93,6 +143,10 @@ class LogInViewController: UIViewController {
             .sink { [weak self] isActive in
                 if isActive {
                     self?.updateStatusToWelcome()
+                } else {
+                    self?.usernameField.isHidden = true
+                    self?.passwordField.isHidden = true
+                    self?.logInButton.isHidden = true
                 }
             }
             .store(in: &cancellables)
@@ -107,7 +161,29 @@ class LogInViewController: UIViewController {
     }
     
     private func updateStatusToWelcome() {
-        statusLabel.text = "Welcome back!\nYour session is active."
+        statusLabel.text = "Your session is active."
+        usernameField.isHidden = false
+        passwordField.isHidden = false
+        logInButton.isHidden = false
+    }
+    
+    @objc private func handleLogInTap() {
+        // For demo purposes: Show a simple alert or print credentials
+        // In a real app, this would trigger auth with backend using queue token
+        guard let username = usernameField.text, !username.isEmpty,
+              let password = passwordField.text, !password.isEmpty else {
+            showAlert(title: "Error", message: "Please enter username and password.")
+            return
+        }
+        
+        print("Demo Log In: Username - \(username), Password - \(password)")
+        showAlert(title: "Success", message: "Logged in successfully! (Demo)")
+    }
+    
+    private func showAlert(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
     
     private func showMissingSettingsAlert() {

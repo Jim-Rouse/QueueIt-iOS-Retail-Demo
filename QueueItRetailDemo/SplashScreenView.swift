@@ -19,11 +19,7 @@ struct SplashScreenView: View {
                     .ignoresSafeArea()
                 
                 VStack(spacing: 24) {
-                    Image("queueit-logo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 180)
-                        .shadow(radius: 10)
+                    
                     
                     Text("QUEUE-IT")
                         .font(.system(size: 42, weight: .black, design: .rounded))
