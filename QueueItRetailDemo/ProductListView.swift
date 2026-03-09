@@ -1,3 +1,4 @@
+
 //
 //  ProductListView.swift
 //  QueueItRetailDemo
@@ -16,6 +17,11 @@ struct Product: Codable {
 struct ProductListView: View {
     @ObservedObject var queueManager: QueueManager
     @State private var products: [Product] = []
+    @State private var cartItems: [Product] = []
+    
+    var cartCount: Int {
+        cartItems.count
+    }
     
     var body: some View {
         List {
@@ -34,8 +40,9 @@ struct ProductListView: View {
                     
                     Spacer()
                     
-                    Button("Buy Now") {
-                        queueManager.activateWaitingRoom() // Demo: triggers queue on purchase
+                    Button("Add To Cart") {
+                        cartItems.append(product)
+                        queueManager.activateWaitingRoom() // Demo: triggers queue on add to cart
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(Color(hex: "00C853"))
@@ -44,6 +51,26 @@ struct ProductListView: View {
             }
         }
         .navigationTitle("Shop")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                ZStack {
+                    Image(systemName: "cart")
+                        .font(.title2)
+                        .foregroundColor(.primary)
+                    
+                    if cartCount > 0 {
+                        Text("\(cartCount)")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .frame(width: 16, height: 16)
+                            .background(Color.red)
+                            .clipShape(Circle())
+                            .offset(x: 10, y: -10)
+                    }
+                }
+            }
+        }
         .onAppear {
             Task {
                 await fetchProducts()
@@ -66,3 +93,4 @@ struct ProductListView: View {
         }
     }
 }
+
