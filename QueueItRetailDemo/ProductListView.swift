@@ -1,4 +1,3 @@
-
 //
 //  ProductListView.swift
 //  QueueItRetailDemo
@@ -18,6 +17,7 @@ struct ProductListView: View {
     @ObservedObject var queueManager: QueueManager
     @State private var products: [Product] = []
     @State private var cartItems: [Product] = []
+    @State private var loadingProducts: Set<String> = []
     
     var cartCount: Int {
         cartItems.count
@@ -41,11 +41,16 @@ struct ProductListView: View {
                     Spacer()
                     
                     Button("Add To Cart") {
-                        cartItems.append(product)
-                        queueManager.activateWaitingRoom() // Demo: triggers queue on add to cart
+                        addToCart(product: product)
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(Color(hex: "00C853"))
+                    .overlay {
+                        if loadingProducts.contains(product.name) {
+                            ProgressView()
+                        }
+                    }
+                    .disabled(loadingProducts.contains(product.name))
                 }
                 .padding(.vertical, 8)
             }
@@ -79,18 +84,34 @@ struct ProductListView: View {
     }
     
     private func fetchProducts() async {
+        guard let url = URL(string: "https://retail.queue-it-demo.com/api/productList.json") else {
+            print("Invalid URL")
+            return
+        }
+        
         do {
-            guard let url = URL(string: "https://retail.queue-it-demo.com/api/productList.json") else {
-                print("Invalid URL")
-                return
-            }
-            
-            let (data, _) = try await URLSession.shared.data(from: url)
+            let data = try await queueManager.makeProtectedRequest(to: url.absoluteString)
             products = try JSONDecoder().decode([Product].self, from: data)
         } catch {
             print("Error fetching products: \(error.localizedDescription)")
             // For production, you might want to show an alert or retry button
         }
     }
+    
+    private func addToCart(product: Product) {
+        loadingProducts.insert(product.name)
+        let urlString = "https://retail.queue-it-demo.com/api/addToCart?product=\(product.name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"  // Fictional for demo
+        queueManager.makeProtectedRequest(to: urlString) { result in
+            DispatchQueue.main.async {
+                self.loadingProducts.remove(product.name)
+                switch result {
+                case .success:
+                    self.cartItems.append(product)
+                    print("Added \(product.name) to cart")
+                case .failure(let error):
+                    print("Error adding to cart: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
 }
-

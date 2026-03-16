@@ -37,6 +37,9 @@ class QueueManager: ObservableObject, QueueListener {
     var waitingRoomDomain: String { UserDefaults.standard.string(forKey: "waitingRoomDomain") ?? "" }
     var waitingRoomPrefix: String { UserDefaults.standard.string(forKey: "waitingRoomPrefix") ?? "" }
     
+    // Response cookies variable
+    var responseCookies: String = ""
+    
     func createEngine() {
         guard !customerID.isEmpty, !waitingRoomID.isEmpty else { return }
         
@@ -70,6 +73,184 @@ class QueueManager: ObservableObject, QueueListener {
                 await engine.runWithEnqueueKey(enqueueKey)
             } else {
                 await engine.run()
+            }
+        }
+    }
+    
+    // MARK: - Protected Request (callback version)
+    func makeProtectedRequest(to urlString: String, completion: @escaping (Result<Data, Error>) -> Void) {
+        guard let url = URL(string: urlString) else {
+            completion(.failure(NSError(domain: "Invalid URL", code: 0)))
+            return
+        }
+        
+        var request = URLRequest(url: url)
+        request.addValue(url.absoluteString, forHTTPHeaderField: "x-queueit-ajaxpageurl")
+        if !responseCookies.isEmpty {
+            request.addValue(responseCookies, forHTTPHeaderField: "Cookie")
+        }
+        
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            
+            guard let data = data, let httpResponse = response as? HTTPURLResponse else {
+                completion(.failure(NSError(domain: "Invalid response", code: 0)))
+                return
+            }
+            
+            // Save Set-Cookie header
+            if let setCookie = httpResponse.value(forHTTPHeaderField: "Set-Cookie") {
+                self.responseCookies = setCookie
+            }
+            
+            // Check for x-queueit-redirect header
+            if let redirectStr = httpResponse.value(forHTTPHeaderField: "x-queueit-redirect") {
+                guard let decodedRedirectStr = redirectStr.removingPercentEncoding,
+                      let redirectURL = URL(string: decodedRedirectStr) else {
+                    completion(.failure(NSError(domain: "Invalid redirect URL", code: 0)))
+                    return
+                }
+                
+                // Parse URL querystring parameters
+                let components = URLComponents(url: redirectURL, resolvingAgainstBaseURL: false)
+                var params: [String: String] = [:]
+                components?.queryItems?.forEach { params[$0.name] = $0.value }
+                
+                let customerId = params["c"]
+                let waitingRoomOrAliasId = params["e"]
+                let language = params["language"]
+                let layoutName = params["layoutName"]
+                let enqueueToken = params["enqueueToken"]
+                let enqueueKey = params["enqueueKey"]
+                
+                guard let customerId = customerId, let waitingRoomOrAliasId = waitingRoomOrAliasId else {
+                    completion(.failure(NSError(domain: "Missing required parameters from redirect", code: 0)))
+                    return
+                }
+                
+                // Create stub QueueListener with log statements
+                class StubQueueListener: NSObject, QueueListener {
+                    let originalURLString: String
+                    let manager: QueueManager
+                    let completion: (Result<Data, Error>) -> Void
+                    
+                    init(originalURLString: String, manager: QueueManager, completion: @escaping (Result<Data, Error>) -> Void) {
+                        self.originalURLString = originalURLString
+                        self.manager = manager
+                        self.completion = completion
+                    }
+                    
+                    func onQueuePassed(_ info: QueuePassedInfo) {
+                        print("Stub: onQueuePassed - Token: \(info.queueItToken ?? "nil")")
+                        // Retry the original request with queueittoken appended
+                        var newURLString = originalURLString
+                        if let token = info.queueItToken {
+                            newURLString += (originalURLString.contains("?") ? "&" : "?") + "queueittoken=\(token)"
+                        }
+                        manager.makeProtectedRequest(to: newURLString, completion: completion)
+                    }
+                    
+                    func onQueueViewWillOpen() {
+                        print("Stub: onQueueViewWillOpen")
+                    }
+                    
+                    func onQueueDisabled(_ info: QueueDisabledInfo) {
+                        print("Stub: onQueueDisabled")
+                    }
+                    
+                    func onQueueItUnavailable() {
+                        print("Stub: onQueueItUnavailable")
+                    }
+                    
+                    func onError(_ error: QueueError, errorMessage: String) {
+                        print("Stub: onError - Error: \(error), Message: \(errorMessage)")
+                    }
+                    
+                    func onWebViewClosed() {
+                        print("Stub: onWebViewClosed")
+                    }
+                    
+                    func onSessionRestart() {
+                        print("Stub: onSessionRestart")
+                    }
+                    
+                    func onQueueUrlChanged(url: URL) {
+                        print("Stub: onQueueUrlChanged - URL: \(url.absoluteString)")
+                    }
+                    
+                    func onSSLError(errorMessage: String) {
+                        print("Stub: onSSLError - Message: \(errorMessage)")
+                    }
+                }
+                
+                let listener = StubQueueListener(originalURLString: urlString, manager: self, completion: completion)
+                
+                DispatchQueue.main.async {
+                    // Create QueueItEngine with parsed parameters
+                    let engine = QueueItEngine(
+                        customerId: customerId,
+                        waitingRoomOrAliasId: waitingRoomOrAliasId,
+                        queueListener: listener,
+                        themeName: layoutName,
+                        language: language ?? "en",
+                        waitingRoomDomain: self.waitingRoomDomain.isEmpty ? nil : self.waitingRoomDomain,
+                        queuePathPrefix: self.waitingRoomPrefix.isEmpty ? nil : self.waitingRoomPrefix
+                    )
+                    
+                    // Temporarily set engine and viewManager for this operation
+                    self.engine = engine
+                    self.viewManager = engine.viewManager
+                    
+                    // Bind showWebView
+                    self.viewManager?.$showWebView
+                        .receive(on: RunLoop.main)
+                        .assign(to: \.showWebView, on: self)
+                        .store(in: &self.cancellables)
+                    
+                    Task { @MainActor in
+                        do {
+                            let tryPassResult: QueueTryPassResult?
+                            if let enqueueToken = enqueueToken, !enqueueToken.isEmpty {
+                                tryPassResult = try await engine.tryPass(enqueueToken: enqueueToken)
+                            } else if let enqueueKey = enqueueKey, !enqueueKey.isEmpty {
+                                tryPassResult = try await engine.tryPass(enqueueKey: enqueueKey)
+                            } else {
+                                tryPassResult = try await engine.tryPass()
+                            }
+                            
+                            if let result = tryPassResult {
+                                if result.redirectType == .queue {
+                                    engine.showQueue(queueTryPassResult: result)
+                                }
+                                // Other cases are handled by the listener callbacks
+                            }
+                        } catch {
+                            self.errorMessage = error.localizedDescription
+                            self.showError = true
+                            completion(.failure(error))
+                        }
+                    }
+                }
+            } else {
+                // No redirect, return the response data
+                completion(.success(data))
+            }
+        }.resume()
+    }
+    
+    // MARK: - Protected Request (async version for convenience)
+    func makeProtectedRequest(to urlString: String) async throws -> Data {
+        try await withCheckedThrowingContinuation { continuation in
+            makeProtectedRequest(to: urlString) { result in
+                switch result {
+                case .success(let data):
+                    continuation.resume(returning: data)
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
             }
         }
     }
