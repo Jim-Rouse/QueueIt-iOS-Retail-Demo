@@ -89,6 +89,9 @@ class QueueManager: ObservableObject, QueueListener {
         if !responseCookies.isEmpty {
             request.addValue(responseCookies, forHTTPHeaderField: "Cookie")
         }
+        if let queueItToken = UserDefaults.standard.string(forKey: "queueItToken") {
+            request.addValue(queueItToken, forHTTPHeaderField: "x-queueittoken")
+        }
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
@@ -123,77 +126,20 @@ class QueueManager: ObservableObject, QueueListener {
                 let waitingRoomOrAliasId = params["e"]
                 let language = params["language"]
                 let layoutName = params["layoutName"]
-                let enqueueToken = params["enqueueToken"]
-                let enqueueKey = params["enqueueKey"]
+                let enqueueToken = params["enqueuetoken"]
+                let enqueueKey = params["enqueuekey"]
                 
                 guard let customerId = customerId, let waitingRoomOrAliasId = waitingRoomOrAliasId else {
                     completion(.failure(NSError(domain: "Missing required parameters from redirect", code: 0)))
                     return
                 }
                 
-                // Create stub QueueListener with log statements
-                class StubQueueListener: NSObject, QueueListener {
-                    let originalURLString: String
-                    let manager: QueueManager
-                    let completion: (Result<Data, Error>) -> Void
-                    
-                    init(originalURLString: String, manager: QueueManager, completion: @escaping (Result<Data, Error>) -> Void) {
-                        self.originalURLString = originalURLString
-                        self.manager = manager
-                        self.completion = completion
-                    }
-                    
-                    func onQueuePassed(_ info: QueuePassedInfo) {
-                        print("Stub: onQueuePassed - Token: \(info.queueItToken ?? "nil")")
-                        // Retry the original request with queueittoken appended
-                        var newURLString = originalURLString
-                        if let token = info.queueItToken {
-                            newURLString += (originalURLString.contains("?") ? "&" : "?") + "queueittoken=\(token)"
-                        }
-                        manager.makeProtectedRequest(to: newURLString, completion: completion)
-                    }
-                    
-                    func onQueueViewWillOpen() {
-                        print("Stub: onQueueViewWillOpen")
-                    }
-                    
-                    func onQueueDisabled(_ info: QueueDisabledInfo) {
-                        print("Stub: onQueueDisabled")
-                    }
-                    
-                    func onQueueItUnavailable() {
-                        print("Stub: onQueueItUnavailable")
-                    }
-                    
-                    func onError(_ error: QueueError, errorMessage: String) {
-                        print("Stub: onError - Error: \(error), Message: \(errorMessage)")
-                    }
-                    
-                    func onWebViewClosed() {
-                        print("Stub: onWebViewClosed")
-                    }
-                    
-                    func onSessionRestart() {
-                        print("Stub: onSessionRestart")
-                    }
-                    
-                    func onQueueUrlChanged(url: URL) {
-                        print("Stub: onQueueUrlChanged - URL: \(url.absoluteString)")
-                    }
-                    
-                    func onSSLError(errorMessage: String) {
-                        print("Stub: onSSLError - Message: \(errorMessage)")
-                    }
-                }
-                
-                let listener = StubQueueListener(originalURLString: urlString, manager: self, completion: completion)
-                
                 DispatchQueue.main.async {
                     // Create QueueItEngine with parsed parameters
                     let engine = QueueItEngine(
                         customerId: customerId,
                         waitingRoomOrAliasId: waitingRoomOrAliasId,
-                        queueListener: listener,
+                        queueListener: self,
                         themeName: layoutName,
                         language: language ?? "en",
                         waitingRoomDomain: self.waitingRoomDomain.isEmpty ? nil : self.waitingRoomDomain,
@@ -214,11 +160,11 @@ class QueueManager: ObservableObject, QueueListener {
                         do {
                             let tryPassResult: QueueTryPassResult?
                             if let enqueueToken = enqueueToken, !enqueueToken.isEmpty {
-                                tryPassResult = try await engine.tryPass(enqueueToken: enqueueToken)
+                                tryPassResult = await engine.tryPass(enqueueToken: enqueueToken)
                             } else if let enqueueKey = enqueueKey, !enqueueKey.isEmpty {
-                                tryPassResult = try await engine.tryPass(enqueueKey: enqueueKey)
+                                tryPassResult = await engine.tryPass(enqueueKey: enqueueKey)
                             } else {
-                                tryPassResult = try await engine.tryPass()
+                                tryPassResult = await engine.tryPass()
                             }
                             
                             if let result = tryPassResult {
@@ -237,6 +183,8 @@ class QueueManager: ObservableObject, QueueListener {
             } else {
                 // No redirect, return the response data
                 completion(.success(data))
+                // Clear the persisted token after successful request
+                UserDefaults.standard.removeObject(forKey: "queueItToken")
             }
         }.resume()
     }
@@ -258,8 +206,9 @@ class QueueManager: ObservableObject, QueueListener {
     // MARK: - QueueListener
     func onQueuePassed(_ info: QueuePassedInfo) {
         print("✅ Queue passed! Token: \(String(describing: info.queueItToken))")
-        // You can persist the token here if needed for future API calls
-        
+        if let token = info.queueItToken {
+            UserDefaults.standard.set(token, forKey: "queueItToken")
+        }
         // Start session timer
         DispatchQueue.main.async { [weak self] in
             self?.startSessionTimer()
@@ -284,11 +233,27 @@ class QueueManager: ObservableObject, QueueListener {
     }
     
     // Default empty implementations for the rest
-    func onQueueViewWillOpen() {}
-    func onWebViewClosed() {}
-    func onSessionRestart() {}
-    func onQueueUrlChanged(url: URL) {}
-    func onSSLError(errorMessage: String) {}
+    func onQueueViewWillOpen() {
+        print("Stub: onQueueViewWillOpen")
+    }
+    func onWebViewClosed() {
+        print("Stub: onWebViewClosed")
+    }
+    
+    func onSessionRestart() {
+        print("Stub: onSessionRestart")
+    }
+    
+    func onQueueUrlChanged(url: URL) {
+        print("Stub: onQueueUrlChanged - URL: \(url.absoluteString)")
+    }
+    
+    func onSSLError(errorMessage: String) {
+        print("Stub: onSSLError - Message: \(errorMessage)")
+    }
+    
+    
+    
     
     // NEW: Session Timer Logic
     private func startSessionTimer() {
@@ -309,6 +274,7 @@ class QueueManager: ObservableObject, QueueListener {
     private func handleSessionExpiry() {
         sessionActive = false
         showSessionExpired = true
+        UserDefaults.standard.removeObject(forKey: "queueItToken")
         DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) { [weak self] in
             self?.showSessionExpired = false
             self?.navigateToHome = true
