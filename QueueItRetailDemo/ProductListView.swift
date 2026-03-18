@@ -11,7 +11,6 @@ struct Product: Codable {
     let name: String
     let price: String
     let icon: String
-    let product_id: String
 }
 
 struct ProductListView: View {
@@ -111,7 +110,7 @@ struct ProductListView: View {
     
     private func addToCart(product: Product) {
         loadingProducts.insert(product.name)
-        let urlString = "https://retail.queue-it-demo.com/api/\(product.product_id).json?product=\(product.name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"
+        let urlString = "https://retail.queue-it-demo.com/api/addToCart?product=\(product.name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"  // Fictional for demo
         queueManager.makeProtectedRequest(to: urlString) { result in
             DispatchQueue.main.async {
                 self.loadingProducts.remove(product.name)
