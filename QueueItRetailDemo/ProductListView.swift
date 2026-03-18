@@ -18,6 +18,7 @@ struct ProductListView: View {
     @State private var products: [Product] = []
     @State private var cartItems: [Product] = []
     @State private var loadingProducts: Set<String> = []
+    @State private var addedProducts: Set<String> = []
     
     var cartCount: Int {
         cartItems.count
@@ -41,7 +42,7 @@ struct ProductListView: View {
                     Spacer()
                     
                     let isLoading = loadingProducts.contains(product.name)
-                    let isAdded   = cartItems.contains(where: { $0.name == product.name })
+                    let isAdded   = addedProducts.contains(product.name)
 
                     Button {
                         addToCart(product: product)
@@ -117,7 +118,11 @@ struct ProductListView: View {
                 switch result {
                 case .success:
                     self.cartItems.append(product)
+                    self.addedProducts.insert(product.name)
                     print("Added \(product.name) to cart")
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        self.addedProducts.remove(product.name)
+                    }
                 case .failure(let error):
                     print("Error adding to cart: \(error.localizedDescription)")
                 }
