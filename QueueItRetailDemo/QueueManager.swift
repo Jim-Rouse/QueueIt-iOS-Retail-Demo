@@ -4,10 +4,6 @@
 //
 //  Created by James Rouse on 2/26/26.
 //
-//  Updated: makeProtectedRequest now reads outgoing Cookie header from
-//  CookieManager and writes back (or clears) QueueItAccepted cookies
-//  from the response Set-Cookie headers.
-//
 
 import SwiftUI
 import Combine
@@ -31,8 +27,8 @@ class QueueManager: ObservableObject, QueueListener {
     private var sessionTimer: Timer?
     private var isExplicitActivationInProgress = false
 
-    /// Stored retry closure — set when a makeProtectedRequest call is redirected
-    /// to the waiting room. Fired automatically in onQueuePassed.
+    /// Stored retry closure — set when a makeProtectedRequest call hits the waiting room.
+    /// Fired automatically in handleQueuePassed so the original request is replayed.
     private var pendingRequest: (() -> Void)?
 
     // MARK: - Config from UserDefaults
@@ -44,9 +40,6 @@ class QueueManager: ObservableObject, QueueListener {
     var enqueueKey: String { UserDefaults.standard.string(forKey: "enqueueKey") ?? "" }
     var waitingRoomDomain: String { UserDefaults.standard.string(forKey: "waitingRoomDomain") ?? "" }
     var waitingRoomPrefix: String { UserDefaults.standard.string(forKey: "waitingRoomPrefix") ?? "" }
-
-    // Legacy response-cookie string kept for non-redirect paths (unchanged behaviour)
-    var responseCookies: String = ""
 
     // MARK: - Engine Setup
 
@@ -115,14 +108,9 @@ class QueueManager: ObservableObject, QueueListener {
         request.addValue(url.absoluteString, forHTTPHeaderField: "x-queueit-ajaxpageurl")
         print("[QueueManager] 📤 Set header x-queueit-ajaxpageurl: \(url.absoluteString)")
 
-        // Cookie header: prefer CookieManager (QueueItAccepted cookies), fall back to
-        // legacy responseCookies string for backwards compatibility.
         if let cookieHeader = CookieManager.shared.cookieHeaderValue() {
             request.addValue(cookieHeader, forHTTPHeaderField: "Cookie")
-            print("[QueueManager] 📤 Set Cookie header from CookieManager: \(cookieHeader)")
-        } else if !responseCookies.isEmpty {
-            request.addValue(responseCookies, forHTTPHeaderField: "Cookie")
-            print("[QueueManager] 📤 Set Cookie header from legacy responseCookies: \(responseCookies)")
+            print("[QueueManager] 📤 Set Cookie header: \(cookieHeader)")
         } else {
             print("[QueueManager] ℹ️  No cookies to attach to request")
         }
@@ -149,19 +137,14 @@ class QueueManager: ObservableObject, QueueListener {
             print("[QueueManager] 📥 Response status: \(httpResponse.statusCode) for \(urlString)")
 
             // ── Incoming cookies ──────────────────────────────────────────────
-            // Process Set-Cookie headers: save QueueItAccepted cookies or clear store.
             CookieManager.shared.processResponseCookies(from: httpResponse, requestURL: url)
-
-            // Also keep the legacy responseCookies string in sync (for non-redirected flows)
-            if let setCookie = httpResponse.value(forHTTPHeaderField: "set-cookie") {
-                print("[QueueManager] 🍪 Raw Set-Cookie header: \(setCookie)")
-                self.responseCookies = setCookie
-            } else {
-                print("[QueueManager] ℹ️  No Set-Cookie header in response")
-            }
             // ─────────────────────────────────────────────────────────────────
 
             // ── Queue-it redirect handling ────────────────────────────────────
+            print("[QueueManager] 📥 Response headers:")
+            for (key, value) in httpResponse.allHeaderFields {
+                print("[QueueManager]    \(key): \(value)")
+            }
             if let redirectStr = httpResponse.value(forHTTPHeaderField: "x-queueit-redirect") {
                 print("[QueueManager] 🔀 x-queueit-redirect header detected: \(redirectStr)")
 
@@ -177,12 +160,12 @@ class QueueManager: ObservableObject, QueueListener {
                 components?.queryItems?.forEach { params[$0.name] = $0.value }
                 print("[QueueManager] 🔀 Redirect params: \(params)")
 
-                let customerId          = params["c"]
+                let customerId           = params["c"]
                 let waitingRoomOrAliasId = params["e"]
-                let language            = params["language"]
-                let layoutName          = params["layoutName"]
-                let enqueueToken        = params["enqueuetoken"]
-                let enqueueKey          = params["enqueuekey"]
+                let language             = params["language"]
+                let layoutName           = params["layoutName"]
+                let enqueueToken         = params["enqueuetoken"]
+                let enqueueKey           = params["enqueuekey"]
 
                 guard let customerId = customerId, let waitingRoomOrAliasId = waitingRoomOrAliasId else {
                     print("[QueueManager] ❌ Missing required redirect params (c or e)")
@@ -191,7 +174,7 @@ class QueueManager: ObservableObject, QueueListener {
                 }
 
                 DispatchQueue.main.async {
-                    // Store the original request as a retry so onQueuePassed can replay it
+                    // Store the original request so it can be replayed after the queue is passed
                     self.pendingRequest = { [weak self] in
                         self?.makeProtectedRequest(to: urlString, completion: completion)
                     }
@@ -232,6 +215,9 @@ class QueueManager: ObservableObject, QueueListener {
                                 print("[QueueManager] 🔀 tryPass redirectType: \(result.redirectType)")
                                 if result.redirectType == .queue {
                                     engine.showQueue(queueTryPassResult: result)
+                                } else if result.redirectType == .safetyNet {
+                                    print("[QueueManager] 🛡️  safetyNet – treating as queue passed")
+                                    self.handleQueuePassed(token: result.queueItToken)
                                 }
                             }
                         } catch {
@@ -272,8 +258,11 @@ class QueueManager: ObservableObject, QueueListener {
 
     func onQueuePassed(_ info: QueuePassedInfo) {
         print("[QueueManager] ✅ onQueuePassed – token: \(info.queueItToken ?? "nil")")
+        handleQueuePassed(token: info.queueItToken)
+    }
 
-        if let token = info.queueItToken {
+    private func handleQueuePassed(token: String?) {
+        if let token = token {
             UserDefaults.standard.set(token, forKey: "queueItToken")
         }
 
@@ -285,7 +274,6 @@ class QueueManager: ObservableObject, QueueListener {
 
         resetExplicitActivation()
 
-        // Replay any request that was interrupted by the waiting room redirect
         if let retry = pendingRequest {
             pendingRequest = nil
             print("[QueueManager] 🔁 Replaying pending request after queue pass")
@@ -321,25 +309,11 @@ class QueueManager: ObservableObject, QueueListener {
         resetExplicitActivation()
     }
 
-    func onQueueViewWillOpen() {
-        print("[QueueManager] ℹ️  onQueueViewWillOpen")
-    }
-
-    func onWebViewClosed() {
-        print("[QueueManager] ℹ️  onWebViewClosed")
-    }
-
-    func onSessionRestart() {
-        print("[QueueManager] ℹ️  onSessionRestart")
-    }
-
-    func onQueueUrlChanged(url: URL) {
-        print("[QueueManager] ℹ️  onQueueUrlChanged – \(url.absoluteString)")
-    }
-
-    func onSSLError(errorMessage: String) {
-        print("[QueueManager] ⚠️  onSSLError – \(errorMessage)")
-    }
+    func onQueueViewWillOpen() { print("[QueueManager] ℹ️  onQueueViewWillOpen") }
+    func onWebViewClosed() { print("[QueueManager] ℹ️  onWebViewClosed") }
+    func onSessionRestart() { print("[QueueManager] ℹ️  onSessionRestart") }
+    func onQueueUrlChanged(url: URL) { print("[QueueManager] ℹ️  onQueueUrlChanged – \(url.absoluteString)") }
+    func onSSLError(errorMessage: String) { print("[QueueManager] ⚠️  onSSLError – \(errorMessage)") }
 
     // MARK: - Session Timer
 
