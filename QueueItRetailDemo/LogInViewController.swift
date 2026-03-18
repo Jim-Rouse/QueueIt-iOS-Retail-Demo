@@ -141,13 +141,10 @@ class LogInViewController: UIViewController {
         queueManager?.$queuePassed
             .receive(on: RunLoop.main)
             .sink { [weak self] passed in
-                if passed {
-                    self?.updateStatusToWelcome()
-                }
+                if passed { self?.updateStatusToWelcome() }
             }
             .store(in: &cancellables)
 
-        // Hide status label while web view is showing
         queueManager?.$showWebView
             .receive(on: RunLoop.main)
             .sink { [weak self] isShowing in
