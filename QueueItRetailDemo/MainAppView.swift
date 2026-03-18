@@ -97,14 +97,15 @@ struct MainAppView: View {
     }
 }
 
-// MARK: - Custom Bottom Bar (only Settings + User State)
+// MARK: - Custom Bottom Bar (Home, Log-in, Product List)
 struct CustomBottomBar: View {
     @Binding var currentScreen: AppScreen
     
     var body: some View {
         HStack(spacing: 0) {
-            BottomButton(title: "Settings", icon: "gear", screen: .settings, current: $currentScreen)
-            BottomButton(title: "User State", icon: "person.text.rectangle", screen: .userState, current: $currentScreen)
+            BottomButton(title: "Home",         icon: "house",              screen: .home,        current: $currentScreen)
+            BottomButton(title: "Log-in",       icon: "arrow.right.square", screen: .login,       current: $currentScreen)
+            BottomButton(title: "Product List", icon: "cart",               screen: .productList, current: $currentScreen)
         }
         .background(Color.white.shadow(radius: 8))
     }

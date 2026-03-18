@@ -15,7 +15,7 @@ struct MenuView: View {
     var body: some View {
         NavigationView {
             List {
-                ForEach([AppScreen.home, .login, .productList], id: \.self) { screen in
+                ForEach([AppScreen.settings, .userState], id: \.self) { screen in
                     Button {
                         currentScreen = screen
                         dismiss()
@@ -30,9 +30,8 @@ struct MenuView: View {
     
     private func iconFor(_ screen: AppScreen) -> String {
         switch screen {
-        case .home: return "house"
-        case .login: return "arrow.right.square"
-        case .productList: return "cart"
+        case .settings: return "gear"
+        case .userState: return "person.text.rectangle"
         default: return "square"
         }
     }
