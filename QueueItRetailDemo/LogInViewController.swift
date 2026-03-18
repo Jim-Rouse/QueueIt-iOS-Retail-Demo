@@ -138,20 +138,16 @@ class LogInViewController: UIViewController {
     }
     
     private func observeQueueState() {
-        queueManager?.$sessionActive
+        queueManager?.$queuePassed
             .receive(on: RunLoop.main)
-            .sink { [weak self] isActive in
-                if isActive {
+            .sink { [weak self] passed in
+                if passed {
                     self?.updateStatusToWelcome()
-                } else {
-                    self?.usernameField.isHidden = true
-                    self?.passwordField.isHidden = true
-                    self?.logInButton.isHidden = true
                 }
             }
             .store(in: &cancellables)
-        
-        // Optional: Hide status during web view (though fullScreenCover overlays anyway)
+
+        // Hide status label while web view is showing
         queueManager?.$showWebView
             .receive(on: RunLoop.main)
             .sink { [weak self] isShowing in
@@ -161,7 +157,11 @@ class LogInViewController: UIViewController {
     }
     
     private func updateStatusToWelcome() {
-        statusLabel.text = "Your session is active."
+        UIView.animate(withDuration: 0.3) {
+            self.statusLabel.alpha = 0
+        } completion: { _ in
+            self.statusLabel.isHidden = true
+        }
         usernameField.isHidden = false
         passwordField.isHidden = false
         logInButton.isHidden = false

@@ -21,6 +21,7 @@ class QueueManager: ObservableObject, QueueListener {
     @Published var remainingTime: Int = 0
     @Published var showSessionExpired: Bool = false
     @Published var navigateToHome: Bool = false
+    @Published var queuePassed: Bool = false
 
     private var engine: QueueItEngine?
     private var cancellables = Set<AnyCancellable>()
@@ -266,13 +267,15 @@ class QueueManager: ObservableObject, QueueListener {
             UserDefaults.standard.set(token, forKey: "queueItToken")
         }
 
-        if isExplicitActivationInProgress {
-            DispatchQueue.main.async { [weak self] in
-                self?.startSessionTimer()
-            }
-        }
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.queuePassed = true
 
-        resetExplicitActivation()
+            if self.isExplicitActivationInProgress {
+                self.startSessionTimer()
+            }
+            self.resetExplicitActivation()
+        }
 
         if let retry = pendingRequest {
             pendingRequest = nil
