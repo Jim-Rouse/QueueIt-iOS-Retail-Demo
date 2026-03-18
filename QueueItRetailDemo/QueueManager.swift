@@ -4,7 +4,10 @@
 //
 //  Created by James Rouse on 2/26/26.
 //
-
+//  Updated: makeProtectedRequest now reads outgoing Cookie header from
+//  CookieManager and writes back (or clears) QueueItAccepted cookies
+//  from the response Set-Cookie headers.
+//
 
 import SwiftUI
 import Combine
@@ -16,17 +19,18 @@ class QueueManager: ObservableObject, QueueListener {
     @Published var viewManager: QueueItViewManager?
     @Published var showError = false
     @Published var errorMessage = ""
-    
-    // NEW: Session state management
+
+    // Session state management
     @Published var sessionActive: Bool = false
     @Published var remainingTime: Int = 0
     @Published var showSessionExpired: Bool = false
     @Published var navigateToHome: Bool = false
-    
+
     private var engine: QueueItEngine?
     private var cancellables = Set<AnyCancellable>()
     private var sessionTimer: Timer?
-    
+    private var isExplicitActivationInProgress = false
+
     // MARK: - Config from UserDefaults
     var customerID: String { UserDefaults.standard.string(forKey: "customerID") ?? "" }
     var waitingRoomID: String { UserDefaults.standard.string(forKey: "waitingRoomID") ?? "" }
@@ -36,13 +40,15 @@ class QueueManager: ObservableObject, QueueListener {
     var enqueueKey: String { UserDefaults.standard.string(forKey: "enqueueKey") ?? "" }
     var waitingRoomDomain: String { UserDefaults.standard.string(forKey: "waitingRoomDomain") ?? "" }
     var waitingRoomPrefix: String { UserDefaults.standard.string(forKey: "waitingRoomPrefix") ?? "" }
-    
-    // Response cookies variable
+
+    // Legacy response-cookie string kept for non-redirect paths (unchanged behaviour)
     var responseCookies: String = ""
-    
+
+    // MARK: - Engine Setup
+
     func createEngine() {
         guard !customerID.isEmpty, !waitingRoomID.isEmpty else { return }
-        
+
         engine = QueueItEngine(
             customerId: customerID,
             waitingRoomOrAliasId: waitingRoomID,
@@ -52,21 +58,32 @@ class QueueManager: ObservableObject, QueueListener {
             waitingRoomDomain: waitingRoomDomain.isEmpty ? nil : waitingRoomDomain,
             queuePathPrefix: waitingRoomPrefix.isEmpty ? nil : waitingRoomPrefix
         )
-        
+
         viewManager = engine?.viewManager
-        
-        // Bind SDK's showWebView
+
         viewManager?.$showWebView
             .receive(on: RunLoop.main)
             .assign(to: \.showWebView, on: self)
             .store(in: &cancellables)
     }
-    
+
+    func markAsExplicitActivation() {
+        isExplicitActivationInProgress = true
+    }
+
+    func resetExplicitActivation() {
+        isExplicitActivationInProgress = false
+    }
+
     func activateWaitingRoom() {
         createEngine()
         guard let engine = engine else { return }
-        
+
+        markAsExplicitActivation()
+
         Task { @MainActor in
+            defer { self.resetExplicitActivation() }
+
             if !enqueueToken.isEmpty {
                 await engine.runWithEnqueueToken(enqueueToken)
             } else if !enqueueKey.isEmpty {
@@ -76,66 +93,100 @@ class QueueManager: ObservableObject, QueueListener {
             }
         }
     }
-    
+
     // MARK: - Protected Request (callback version)
+
     func makeProtectedRequest(to urlString: String, completion: @escaping (Result<Data, Error>) -> Void) {
         guard let url = URL(string: urlString) else {
+            print("[QueueManager] ❌ makeProtectedRequest: invalid URL → \(urlString)")
             completion(.failure(NSError(domain: "Invalid URL", code: 0)))
             return
         }
-        
+
+        print("[QueueManager] 🌐 makeProtectedRequest: → \(urlString)")
+
         var request = URLRequest(url: url)
+
+        // ── Outgoing headers ──────────────────────────────────────────────────
         request.addValue(url.absoluteString, forHTTPHeaderField: "x-queueit-ajaxpageurl")
-        if !responseCookies.isEmpty {
+        print("[QueueManager] 📤 Set header x-queueit-ajaxpageurl: \(url.absoluteString)")
+
+        // Cookie header: prefer CookieManager (QueueItAccepted cookies), fall back to
+        // legacy responseCookies string for backwards compatibility.
+        if let cookieHeader = CookieManager.shared.cookieHeaderValue() {
+            request.addValue(cookieHeader, forHTTPHeaderField: "Cookie")
+            print("[QueueManager] 📤 Set Cookie header from CookieManager: \(cookieHeader)")
+        } else if !responseCookies.isEmpty {
             request.addValue(responseCookies, forHTTPHeaderField: "Cookie")
+            print("[QueueManager] 📤 Set Cookie header from legacy responseCookies: \(responseCookies)")
+        } else {
+            print("[QueueManager] ℹ️  No cookies to attach to request")
         }
+
         if let queueItToken = UserDefaults.standard.string(forKey: "queueItToken") {
             request.addValue(queueItToken, forHTTPHeaderField: "x-queueittoken")
+            print("[QueueManager] 📤 Set header x-queueittoken: \(queueItToken)")
         }
-        
+        // ─────────────────────────────────────────────────────────────────────
+
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
+                print("[QueueManager] ❌ Request failed: \(error.localizedDescription)")
                 completion(.failure(error))
                 return
             }
-            
+
             guard let data = data, let httpResponse = response as? HTTPURLResponse else {
+                print("[QueueManager] ❌ Invalid or nil response")
                 completion(.failure(NSError(domain: "Invalid response", code: 0)))
                 return
             }
-            
-            // Save Set-Cookie header
-            if let setCookie = httpResponse.value(forHTTPHeaderField: "Set-Cookie") {
+
+            print("[QueueManager] 📥 Response status: \(httpResponse.statusCode) for \(urlString)")
+
+            // ── Incoming cookies ──────────────────────────────────────────────
+            // Process Set-Cookie headers: save QueueItAccepted cookies or clear store.
+            CookieManager.shared.processResponseCookies(from: httpResponse, requestURL: url)
+
+            // Also keep the legacy responseCookies string in sync (for non-redirected flows)
+            if let setCookie = httpResponse.value(forHTTPHeaderField: "set-cookie") {
+                print("[QueueManager] 🍪 Raw Set-Cookie header: \(setCookie)")
                 self.responseCookies = setCookie
+            } else {
+                print("[QueueManager] ℹ️  No Set-Cookie header in response")
             }
-            
-            // Check for x-queueit-redirect header
+            // ─────────────────────────────────────────────────────────────────
+
+            // ── Queue-it redirect handling ────────────────────────────────────
             if let redirectStr = httpResponse.value(forHTTPHeaderField: "x-queueit-redirect") {
+                print("[QueueManager] 🔀 x-queueit-redirect header detected: \(redirectStr)")
+
                 guard let decodedRedirectStr = redirectStr.removingPercentEncoding,
                       let redirectURL = URL(string: decodedRedirectStr) else {
+                    print("[QueueManager] ❌ Could not decode redirect URL: \(redirectStr)")
                     completion(.failure(NSError(domain: "Invalid redirect URL", code: 0)))
                     return
                 }
-                
-                // Parse URL querystring parameters
+
                 let components = URLComponents(url: redirectURL, resolvingAgainstBaseURL: false)
                 var params: [String: String] = [:]
                 components?.queryItems?.forEach { params[$0.name] = $0.value }
-                
-                let customerId = params["c"]
+                print("[QueueManager] 🔀 Redirect params: \(params)")
+
+                let customerId          = params["c"]
                 let waitingRoomOrAliasId = params["e"]
-                let language = params["language"]
-                let layoutName = params["layoutName"]
-                let enqueueToken = params["enqueuetoken"]
-                let enqueueKey = params["enqueuekey"]
-                
+                let language            = params["language"]
+                let layoutName          = params["layoutName"]
+                let enqueueToken        = params["enqueuetoken"]
+                let enqueueKey          = params["enqueuekey"]
+
                 guard let customerId = customerId, let waitingRoomOrAliasId = waitingRoomOrAliasId else {
+                    print("[QueueManager] ❌ Missing required redirect params (c or e)")
                     completion(.failure(NSError(domain: "Missing required parameters from redirect", code: 0)))
                     return
                 }
-                
+
                 DispatchQueue.main.async {
-                    // Create QueueItEngine with parsed parameters
                     let engine = QueueItEngine(
                         customerId: customerId,
                         waitingRoomOrAliasId: waitingRoomOrAliasId,
@@ -145,51 +196,56 @@ class QueueManager: ObservableObject, QueueListener {
                         waitingRoomDomain: self.waitingRoomDomain.isEmpty ? nil : self.waitingRoomDomain,
                         queuePathPrefix: self.waitingRoomPrefix.isEmpty ? nil : self.waitingRoomPrefix
                     )
-                    
-                    // Temporarily set engine and viewManager for this operation
+
                     self.engine = engine
                     self.viewManager = engine.viewManager
-                    
-                    // Bind showWebView
+
                     self.viewManager?.$showWebView
                         .receive(on: RunLoop.main)
                         .assign(to: \.showWebView, on: self)
                         .store(in: &self.cancellables)
-                    
+
                     Task { @MainActor in
                         do {
                             let tryPassResult: QueueTryPassResult?
                             if let enqueueToken = enqueueToken, !enqueueToken.isEmpty {
+                                print("[QueueManager] 🎟️  tryPass with enqueueToken")
                                 tryPassResult = await engine.tryPass(enqueueToken: enqueueToken)
                             } else if let enqueueKey = enqueueKey, !enqueueKey.isEmpty {
+                                print("[QueueManager] 🔑 tryPass with enqueueKey")
                                 tryPassResult = await engine.tryPass(enqueueKey: enqueueKey)
                             } else {
+                                print("[QueueManager] 🎟️  tryPass (no token/key)")
                                 tryPassResult = await engine.tryPass()
                             }
-                            
+
                             if let result = tryPassResult {
+                                print("[QueueManager] 🔀 tryPass redirectType: \(result.redirectType)")
                                 if result.redirectType == .queue {
                                     engine.showQueue(queueTryPassResult: result)
                                 }
-                                // Other cases are handled by the listener callbacks
                             }
                         } catch {
+                            print("[QueueManager] ❌ tryPass error: \(error.localizedDescription)")
                             self.errorMessage = error.localizedDescription
                             self.showError = true
                             completion(.failure(error))
                         }
                     }
                 }
+
             } else {
-                // No redirect, return the response data
+                // No redirect — success path
+                print("[QueueManager] ✅ Request succeeded, returning \(data.count) byte(s)")
                 completion(.success(data))
-                // Clear the persisted token after successful request
                 UserDefaults.standard.removeObject(forKey: "queueItToken")
+                print("[QueueManager] 🗑️  Cleared stored queueItToken after successful request")
             }
         }.resume()
     }
-    
-    // MARK: - Protected Request (async version for convenience)
+
+    // MARK: - Protected Request (async convenience)
+
     func makeProtectedRequest(to urlString: String) async throws -> Data {
         try await withCheckedThrowingContinuation { continuation in
             makeProtectedRequest(to: urlString) { result in
@@ -202,61 +258,73 @@ class QueueManager: ObservableObject, QueueListener {
             }
         }
     }
-    
+
     // MARK: - QueueListener
+
     func onQueuePassed(_ info: QueuePassedInfo) {
-        print("✅ Queue passed! Token: \(String(describing: info.queueItToken))")
+        print("[QueueManager] ✅ onQueuePassed – token: \(info.queueItToken ?? "nil")")
+
         if let token = info.queueItToken {
             UserDefaults.standard.set(token, forKey: "queueItToken")
         }
-        // Start session timer
-        DispatchQueue.main.async { [weak self] in
-            self?.startSessionTimer()
+
+        if isExplicitActivationInProgress {
+            DispatchQueue.main.async { [weak self] in
+                self?.startSessionTimer()
+            }
         }
+
+        resetExplicitActivation()
     }
-    
+
     func onError(_ error: QueueError, errorMessage: String) {
+        print("[QueueManager] ❌ onError – \(errorMessage)")
         self.errorMessage = errorMessage
         self.showError = true
     }
-    
+
     func onQueueItUnavailable() {
+        print("[QueueManager] ⚠️  onQueueItUnavailable")
         errorMessage = "Queue-it service is currently unavailable"
         showError = true
     }
-    
+
     func onQueueDisabled(_ info: QueueDisabledInfo) {
-        // Treat as passed for demo (proceed with session)
-        DispatchQueue.main.async { [weak self] in
-            self?.startSessionTimer()
+        print("[QueueManager] ℹ️  onQueueDisabled – treating as passed")
+
+        if isExplicitActivationInProgress {
+            DispatchQueue.main.async { [weak self] in
+                self?.startSessionTimer()
+            }
         }
+
+        resetExplicitActivation()
     }
-    
-    // Default empty implementations for the rest
+
     func onQueueViewWillOpen() {
-        print("Stub: onQueueViewWillOpen")
+        print("[QueueManager] ℹ️  onQueueViewWillOpen")
     }
+
     func onWebViewClosed() {
-        print("Stub: onWebViewClosed")
+        print("[QueueManager] ℹ️  onWebViewClosed")
     }
-    
+
     func onSessionRestart() {
-        print("Stub: onSessionRestart")
+        print("[QueueManager] ℹ️  onSessionRestart")
     }
-    
+
     func onQueueUrlChanged(url: URL) {
-        print("Stub: onQueueUrlChanged - URL: \(url.absoluteString)")
+        print("[QueueManager] ℹ️  onQueueUrlChanged – \(url.absoluteString)")
     }
-    
+
     func onSSLError(errorMessage: String) {
-        print("Stub: onSSLError - Message: \(errorMessage)")
+        print("[QueueManager] ⚠️  onSSLError – \(errorMessage)")
     }
-    
-    
-    
-    
-    // NEW: Session Timer Logic
+
+    // MARK: - Session Timer
+
     private func startSessionTimer() {
+        print("[QueueManager] ⏱️  startSessionTimer – 60s session started")
         sessionActive = true
         remainingTime = 60
         sessionTimer?.invalidate()
@@ -266,12 +334,14 @@ class QueueManager: ObservableObject, QueueListener {
             if self.remainingTime <= 0 {
                 self.sessionTimer?.invalidate()
                 self.sessionTimer = nil
+                print("[QueueManager] ⏱️  Session timer expired")
                 self.handleSessionExpiry()
             }
         }
     }
-    
+
     private func handleSessionExpiry() {
+        print("[QueueManager] 🔒 handleSessionExpiry – clearing token and navigating home in 5s")
         sessionActive = false
         showSessionExpired = true
         UserDefaults.standard.removeObject(forKey: "queueItToken")
