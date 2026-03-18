@@ -31,6 +31,10 @@ class QueueManager: ObservableObject, QueueListener {
     private var sessionTimer: Timer?
     private var isExplicitActivationInProgress = false
 
+    /// Stored retry closure — set when a makeProtectedRequest call is redirected
+    /// to the waiting room. Fired automatically in onQueuePassed.
+    private var pendingRequest: (() -> Void)?
+
     // MARK: - Config from UserDefaults
     var customerID: String { UserDefaults.standard.string(forKey: "customerID") ?? "" }
     var waitingRoomID: String { UserDefaults.standard.string(forKey: "waitingRoomID") ?? "" }
@@ -187,6 +191,11 @@ class QueueManager: ObservableObject, QueueListener {
                 }
 
                 DispatchQueue.main.async {
+                    // Store the original request as a retry so onQueuePassed can replay it
+                    self.pendingRequest = { [weak self] in
+                        self?.makeProtectedRequest(to: urlString, completion: completion)
+                    }
+
                     let engine = QueueItEngine(
                         customerId: customerId,
                         waitingRoomOrAliasId: waitingRoomOrAliasId,
@@ -275,16 +284,27 @@ class QueueManager: ObservableObject, QueueListener {
         }
 
         resetExplicitActivation()
+
+        // Replay any request that was interrupted by the waiting room redirect
+        if let retry = pendingRequest {
+            pendingRequest = nil
+            print("[QueueManager] 🔁 Replaying pending request after queue pass")
+            DispatchQueue.main.async {
+                retry()
+            }
+        }
     }
 
     func onError(_ error: QueueError, errorMessage: String) {
         print("[QueueManager] ❌ onError – \(errorMessage)")
+        pendingRequest = nil
         self.errorMessage = errorMessage
         self.showError = true
     }
 
     func onQueueItUnavailable() {
         print("[QueueManager] ⚠️  onQueueItUnavailable")
+        pendingRequest = nil
         errorMessage = "Queue-it service is currently unavailable"
         showError = true
     }
