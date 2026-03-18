@@ -2,11 +2,7 @@
 //  LogInViewController.swift
 //  QueueItRetailDemo
 //
-//  Updated by Grok (xAI) on 2026-03-06
 //  Now uses the shared QueueManager to activate the waiting room
-//  (no duplicate engine creation, no legacy delegate)
-//  Timer starts automatically when the Queue-it web view closes (i.e. user passed the queue)
-//  Session expiry modal + 5-second auto-return to Home
 //
 
 import UIKit

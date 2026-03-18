@@ -17,12 +17,12 @@ struct HomeView: View {
                     .font(.largeTitle.bold())
                     .multilineTextAlignment(.center)
                 
-                Text("To use this app:\n\n• Enter your Queue-it details in Settings\n• Browse products\n• Tap Log-in to experience the real waiting room")
+                Text("To use this app:\n\n• Enter your Queue-it details in Settings\n• Tap Log-in for Simple Integration\n• Tap Product List for Hybrid Integration")
                     .font(.title3)
-                    .multilineTextAlignment(.center)
-                    .padding()
+                    .multilineTextAlignment(.leading)
+                    
                 
-                Text("Retail feel with real Queue-it protection")
+                Text("Queue-it protection")
                     .font(.headline)
                     .foregroundColor(Color(hex: "00C853"))
             }
