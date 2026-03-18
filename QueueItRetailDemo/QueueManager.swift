@@ -142,10 +142,12 @@ class QueueManager: ObservableObject, QueueListener {
             // ─────────────────────────────────────────────────────────────────
 
             // ── Queue-it redirect handling ────────────────────────────────────
-            print("[QueueManager] 📥 Response headers:")
-            for (key, value) in httpResponse.allHeaderFields {
-                print("[QueueManager]    \(key): \(value)")
-            }
+            // ── Use the following to display all headers ────────────────────────────────────
+            //print("[QueueManager] 📥 Response headers:")
+            //for (key, value) in httpResponse.allHeaderFields {
+            //    print("[QueueManager]    \(key): \(value)")
+            //}
+            
             if let redirectStr = httpResponse.value(forHTTPHeaderField: "x-queueit-redirect") {
                 print("[QueueManager] 🔀 x-queueit-redirect header detected: \(redirectStr)")
 
