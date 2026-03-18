@@ -40,17 +40,27 @@ struct ProductListView: View {
                     
                     Spacer()
                     
-                    Button("Add To Cart") {
+                    let isLoading = loadingProducts.contains(product.name)
+                    let isAdded   = cartItems.contains(where: { $0.name == product.name })
+
+                    Button {
                         addToCart(product: product)
+                    } label: {
+                        Group {
+                            if isLoading {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            } else if isAdded {
+                                Label("Added", systemImage: "checkmark")
+                            } else {
+                                Text("Add To Cart")
+                            }
+                        }
+                        .frame(width: 100)
                     }
                     .buttonStyle(.borderedProminent)
-                    .tint(Color(hex: "00C853"))
-                    .overlay {
-                        if loadingProducts.contains(product.name) {
-                            ProgressView()
-                        }
-                    }
-                    .disabled(loadingProducts.contains(product.name))
+                    .tint(isAdded ? .gray : Color(hex: "00C853"))
+                    .disabled(isLoading || isAdded)
                 }
                 .padding(.vertical, 8)
             }
