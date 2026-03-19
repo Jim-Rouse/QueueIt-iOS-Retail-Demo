@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background_grouped">#F2F2F7</color>
+    <color name="bottom_nav_selected">#00C853</color>
+    <color name="bottom_nav_unselected">#999999</color>
+    <color name="colorAccent">#00C853</color>
+    <color name="colorPrimary">#00C853</color>
+    <color name="colorPrimaryDark">#00A043</color>
+    <color name="queueit_green">#00C853</color>
+    <color name="queueit_green_dark">#00A043</color>
+    <color name="queueit_green_transparent">#3300C853</color>
+    <string name="app_name">Queue-it Retail Demo</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="notsure">🛒</string>
+    <style name="Theme.QueueItRetailDemo" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/queueit_green</item>
+        <item name="colorPrimaryDark">@color/queueit_green_dark</item>
+        <item name="colorAccent">@color/queueit_green</item>
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+    <style name="Theme.QueueItRetailDemo.Splash" parent="Theme.QueueItRetailDemo">
+        <item name="android:windowBackground">@color/queueit_green</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">false</item>
+    </style>
+</resources>

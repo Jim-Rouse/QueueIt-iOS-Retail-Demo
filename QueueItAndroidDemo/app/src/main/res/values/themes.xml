@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Base application theme -->
+    <style name="Theme.QueueItRetailDemo" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/queueit_green</item>
+        <item name="colorPrimaryDark">@color/queueit_green_dark</item>
+        <item name="colorAccent">@color/queueit_green</item>
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+
+    <!-- Splash screen theme: full green window, no title bar -->
+    <style name="Theme.QueueItRetailDemo.Splash" parent="Theme.QueueItRetailDemo">
+        <item name="android:windowBackground">@color/queueit_green</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">false</item>
+    </style>
+
+</resources>

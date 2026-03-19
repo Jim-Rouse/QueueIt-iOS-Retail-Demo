@@ -1,0 +1,86 @@
+[
+    {
+        "merged": "com.queueit.retaildemo.app-debug-4:/layout_fragment_login.xml.flat",
+        "source": "com.queueit.retaildemo.app-main-6:/layout/fragment_login.xml"
+    },
+    {
+        "merged": "com.queueit.retaildemo.app-debug-4:/layout_nav_header.xml.flat",
+        "source": "com.queueit.retaildemo.app-main-6:/layout/nav_header.xml"
+    },
+    {
+        "merged": "com.queueit.retaildemo.app-debug-4:/layout_activity_splash.xml.flat",
+        "source": "com.queueit.retaildemo.app-main-6:/layout/activity_splash.xml"
+    },
+    {
+        "merged": "com.queueit.retaildemo.app-debug-4:/layout_fragment_user_state.xml.flat",
+        "source": "com.queueit.retaildemo.app-main-6:/layout/fragment_user_state.xml"
+    },
+    {
+        "merged": "com.queueit.retaildemo.app-debug-4:/layout_fragment_product_list.xml.flat",
+        "source": "com.queueit.retaildemo.app-main-6:/layout/fragment_product_list.xml"
+    },
+    {
+        "merged": "com.queueit.retaildemo.app-debug-4:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.queueit.retaildemo.app-main-6:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.queueit.retaildemo.app-debug-4:/drawable_ic_login.xml.flat",
+        "source": "com.queueit.retaildemo.app-main-6:/drawable/ic_login.xml"
+    },
+    {
+        "merged": "com.queueit.retaildemo.app-debug-4:/drawable_bottom_nav_tint.xml.flat",
+        "source": "com.queueit.retaildemo.app-main-6:/drawable/bottom_nav_tint.xml"
+    },
+    {
+        "merged": "com.queueit.retaildemo.app-debug-4:/layout_fragment_settings.xml.flat",
+        "source": "com.queueit.retaildemo.app-main-6:/layout/fragment_settings.xml"
+    },
+    {
+        "merged": "com.queueit.retaildemo.app-debug-4:/drawable_ic_cart.xml.flat",
+        "source": "com.queueit.retaildemo.app-main-6:/drawable/ic_cart.xml"
+    },
+    {
+        "merged": "com.queueit.retaildemo.app-debug-4:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.queueit.retaildemo.app-main-6:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.queueit.retaildemo.app-debug-4:/drawable_ic_home.xml.flat",
+        "source": "com.queueit.retaildemo.app-main-6:/drawable/ic_home.xml"
+    },
+    {
+        "merged": "com.queueit.retaildemo.app-debug-4:/layout_activity_main.xml.flat",
+        "source": "com.queueit.retaildemo.app-main-6:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.queueit.retaildemo.app-debug-4:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.queueit.retaildemo.app-main-6:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.queueit.retaildemo.app-debug-4:/menu_drawer_menu.xml.flat",
+        "source": "com.queueit.retaildemo.app-main-6:/menu/drawer_menu.xml"
+    },
+    {
+        "merged": "com.queueit.retaildemo.app-debug-4:/drawable_ic_settings.xml.flat",
+        "source": "com.queueit.retaildemo.app-main-6:/drawable/ic_settings.xml"
+    },
+    {
+        "merged": "com.queueit.retaildemo.app-debug-4:/layout_fragment_home.xml.flat",
+        "source": "com.queueit.retaildemo.app-main-6:/layout/fragment_home.xml"
+    },
+    {
+        "merged": "com.queueit.retaildemo.app-debug-4:/drawable_badge_circle.xml.flat",
+        "source": "com.queueit.retaildemo.app-main-6:/drawable/badge_circle.xml"
+    },
+    {
+        "merged": "com.queueit.retaildemo.app-debug-4:/layout_item_product.xml.flat",
+        "source": "com.queueit.retaildemo.app-main-6:/layout/item_product.xml"
+    },
+    {
+        "merged": "com.queueit.retaildemo.app-debug-4:/menu_bottom_nav_menu.xml.flat",
+        "source": "com.queueit.retaildemo.app-main-6:/menu/bottom_nav_menu.xml"
+    },
+    {
+        "merged": "com.queueit.retaildemo.app-debug-4:/drawable_ic_person.xml.flat",
+        "source": "com.queueit.retaildemo.app-main-6:/drawable/ic_person.xml"
+    }
+]

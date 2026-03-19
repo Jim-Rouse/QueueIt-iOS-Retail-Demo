@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@android:color/white"
+    android:orientation="horizontal"
+    android:padding="16dp"
+    android:gravity="center_vertical">
+
+    <!-- Icon column — mirrors iOS Image(systemName: product.icon).font(.largeTitle) -->
+    <TextView
+        android:id="@+id/tv_product_icon"
+        android:layout_width="56dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textSize="32sp" />
+
+    <!-- Name + Price column -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginStart="8dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_product_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_product_price"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:alpha="0.6" />
+
+    </LinearLayout>
+
+    <!-- Add to Cart button + loading spinner -->
+    <FrameLayout
+        android:layout_width="108dp"
+        android:layout_height="40dp">
+
+        <!-- Spinner shown while request is in flight -->
+        <ProgressBar
+            android:id="@+id/pb_add_loading"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="center"
+            android:indeterminateTint="@color/queueit_green"
+            android:visibility="gone" />
+
+        <!-- Button: "Add to Cart" / "✓ Added" -->
+        <Button
+            android:id="@+id/btn_add_to_cart"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:backgroundTint="@color/queueit_green"
+            android:text="Add to Cart"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            style="@style/Widget.MaterialComponents.Button" />
+
+    </FrameLayout>
+
+</LinearLayout>
