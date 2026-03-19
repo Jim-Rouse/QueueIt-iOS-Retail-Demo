@@ -1196,28 +1196,22 @@
   }
 
   /**
-   * Queue-it Hybrid Integration — product fetch gate.
-   * Mirrors the mobile SDK pattern: resolve the Queue-it token first,
-   * then request the protected product resource.
+   * Queue-it Hybrid Integration — mirrors the Swift mobile implementation:
+   *   let urlString = "https://retail.queue-it-demo.com/api/addToCart?product=\(product.name...)"
    *
-   * In production this points at your Queue-it protected API endpoint.
-   * The demo resolves immediately to simulate a passed waiting room token.
+   * The request hits the Queue-it protected endpoint. If the user has not yet
+   * passed through the waiting room the response will redirect them there.
    */
-  function fetchProductWithQueueIt(product) {
-    const QUEUEIT_CUSTOMER_ID = 'your-customerid';          // ← replace in prod
-    const QUEUEIT_EVENT_ID    = 'retail-demo';              // ← replace in prod
-    const PRODUCT_ENDPOINT    = `/api/products/${product.id}`; // ← your real endpoint
-
-    // Simulate the async network round-trip (Queue-it token check + product fetch)
-    // Replace this block with a real fetch() once your Queue-it event is configured:
-    //
-    //   return fetch(PRODUCT_ENDPOINT, {
-    //     headers: { 'X-QueueIt-Token': resolvedToken }
-    //   });
-    //
-    return new Promise(resolve =>
-      setTimeout(() => resolve({ ok: true, product }), 680)
-    );
+  async function fetchProductWithQueueIt(product) {
+    const encoded = encodeURIComponent(product.name);
+    const url = `https://retail.queue-it-demo.com/api/addToCart?product=${encoded}`;
+    return fetch(url, {
+      method: 'GET',
+      credentials: 'include',   // send Queue-it cookies / session tokens
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
   }
 
   /* ── CART UI ── */
