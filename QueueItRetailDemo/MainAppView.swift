@@ -72,7 +72,7 @@ struct MainAppView: View {
         }
         .fullScreenCover(isPresented: $queueManager.showWebView) {
             if let manager = queueManager.viewManager {
-                QueueWebViewContainer(viewManager: manager)
+                QueueWebViewContainer(viewManager: manager, progressBackgroundColor: .red, progressColor: .blue)
             }
         }
         .alert("Queue-it Error", isPresented: $queueManager.showError) {

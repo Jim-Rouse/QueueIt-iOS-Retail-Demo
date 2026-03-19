@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Queue-it Retail</title>
+  <script type='text/javascript' src='//static.queue-it.net/script/queueclient.min.js'></script>
+  <script
+    data-queueit-intercept-domain='retail.queue-it-demo.com'
+    data-queueit-intercept='true'
+    data-queueit-c='akamaidemo1'
+    type='text/javascript'
+    src='//static.queue-it.net/script/queueconfigloader.min.js'>
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --green: #00C832;
+      --green-dark: #00a828;
+      --green-light: #e6faea;
+      --green-mid: #b3f0c2;
+      --black: #0d0d0d;
+      --gray: #f4f5f6;
+      --gray-mid: #e8eaed;
+      --gray-text: #6b7280;
+      --white: #ffffff;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.06);
+      --shadow-md: 0 4px 16px rgba(0,0,0,.10);
+      --shadow-lg: 0 12px 40px rgba(0,0,0,.14);
+      --radius: 14px;
+      --radius-sm: 8px;
+      --transition: 220ms cubic-bezier(.4,0,.2,1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--gray);
+      color: var(--black);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--green);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 64px;
+      box-shadow: 0 2px 12px rgba(0,200,50,.35);
+    }
+
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: var(--white);
+      letter-spacing: -.01em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+
+    .nav-logo svg { width: 28px; height: 28px; fill: var(--white); }
+
+    .nav-links {
+      display: flex;
+      gap: 6px;
+    }
+
+    .nav-links button {
+      background: transparent;
+      border: none;
+      color: rgba(255,255,255,.78);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .9rem;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 7px 14px;
+      border-radius: 30px;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    .nav-links button:hover,
+    .nav-links button.active {
+      background: rgba(255,255,255,.22);
+      color: var(--white);
+    }
+
+    .cart-btn {
+      position: relative;
+      background: rgba(255,255,255,.18) !important;
+      border: none;
+      cursor: pointer;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background var(--transition);
+      flex-shrink: 0;
+    }
+
+    .cart-btn:hover { background: rgba(255,255,255,.30) !important; }
+    .cart-btn svg { width: 20px; height: 20px; stroke: var(--white); fill: none; stroke-width: 2; }
+
+    .cart-badge {
+      position: absolute;
+      top: -4px; right: -4px;
+      background: var(--black);
+      color: var(--white);
+      font-size: .65rem;
+      font-weight: 700;
+      min-width: 18px; height: 18px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 4px;
+      display: none;
+    }
+
+    /* ── PAGES ── */
+    .page { display: none; animation: fadeIn .3s ease; }
+    .page.active { display: block; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    /* ── HOME ── */
+    .hero {
+      background: linear-gradient(135deg, var(--green) 0%, #00a020 100%);
+      padding: 80px 24px 100px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      display: inline-block;
+      background: rgba(255,255,255,.18);
+      color: var(--white);
+      font-size: .78rem;
+      font-weight: 500;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2.2rem, 6vw, 3.6rem);
+      color: var(--white);
+      line-height: 1.1;
+      margin-bottom: 18px;
+      letter-spacing: -.02em;
+    }
+
+    .hero p {
+      color: rgba(255,255,255,.82);
+      font-size: 1.05rem;
+      max-width: 520px;
+      margin: 0 auto 32px;
+      font-weight: 300;
+    }
+
+    .hero-ctas {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      background: var(--white);
+      color: var(--green-dark);
+      border: none;
+      padding: 13px 28px;
+      border-radius: 30px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform var(--transition), box-shadow var(--transition);
+      box-shadow: 0 4px 20px rgba(0,0,0,.2);
+    }
+
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,.25); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--white);
+      border: 2px solid rgba(255,255,255,.5);
+      padding: 13px 28px;
+      border-radius: 30px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+    }
+
+    .btn-secondary:hover { border-color: var(--white); background: rgba(255,255,255,.1); }
+
+    /* Feature strip */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1px;
+      background: var(--gray-mid);
+      margin: 0;
+      border-top: 1px solid var(--gray-mid);
+    }
+
+    .feature-item {
+      background: var(--white);
+      padding: 28px 24px;
+      text-align: center;
+    }
+
+    .feature-icon {
+      width: 44px; height: 44px;
+      background: var(--green-light);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+    }
+
+    .feature-icon svg { width: 22px; height: 22px; stroke: var(--green-dark); fill: none; stroke-width: 2; }
+
+    .feature-item h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: .95rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .feature-item p { font-size: .82rem; color: var(--gray-text); }
+
+    /* Integration section */
+    .section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 56px 24px;
+    }
+
+    .section-label {
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--green-dark);
+      margin-bottom: 8px;
+    }
+
+    .section h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.5rem, 3vw, 2.2rem);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      margin-bottom: 14px;
+    }
+
+    .section p { color: var(--gray-text); max-width: 560px; line-height: 1.7; }
+
+    .integration-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 32px;
+    }
+
+    @media (max-width: 600px) { .integration-cards { grid-template-columns: 1fr; } }
+
+    .integration-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-mid);
+      transition: box-shadow var(--transition), transform var(--transition);
+    }
+
+    .integration-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+
+    .integration-card .tag {
+      display: inline-block;
+      background: var(--green-light);
+      color: var(--green-dark);
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
+
+    .integration-card h3 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 6px; }
+    .integration-card p { font-size: .85rem; color: var(--gray-text); }
+
+    /* ── LOG-IN ── */
+    .login-wrap {
+      min-height: calc(100vh - 64px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      background: var(--gray);
+    }
+
+    .login-card {
+      background: var(--white);
+      border-radius: 20px;
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 400px;
+      padding: 40px 36px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--green), #00e850);
+    }
+
+    .login-icon {
+      width: 56px; height: 56px;
+      background: var(--green-light);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .login-icon svg { width: 28px; height: 28px; stroke: var(--green-dark); fill: none; stroke-width: 2; }
+
+    .login-card h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .login-card .subtitle { color: var(--gray-text); font-size: .9rem; margin-bottom: 28px; }
+
+    .form-group { margin-bottom: 18px; }
+
+    .form-group label {
+      display: block;
+      font-size: .82rem;
+      font-weight: 500;
+      color: var(--black);
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid var(--gray-mid);
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .95rem;
+      background: var(--gray);
+      color: var(--black);
+      transition: border-color var(--transition), background var(--transition);
+      outline: none;
+    }
+
+    .form-group input:focus {
+      border-color: var(--green);
+      background: var(--white);
+      box-shadow: 0 0 0 3px rgba(0,200,50,.12);
+    }
+
+    .forgot { text-align: right; margin-top: -10px; margin-bottom: 22px; }
+    .forgot a { color: var(--green-dark); font-size: .82rem; text-decoration: none; }
+    .forgot a:hover { text-decoration: underline; }
+
+    .btn-login {
+      width: 100%;
+      background: var(--green);
+      color: var(--white);
+      border: none;
+      padding: 13px;
+      border-radius: 30px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .98rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+      box-shadow: 0 4px 16px rgba(0,200,50,.30);
+    }
+
+    .btn-login:hover { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 6px 22px rgba(0,200,50,.4); }
+    .btn-login:active { transform: none; }
+
+    .login-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 22px 0;
+      color: var(--gray-text);
+      font-size: .82rem;
+    }
+
+    .login-divider::before, .login-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--gray-mid);
+    }
+
+    .btn-oauth {
+      width: 100%;
+      background: var(--white);
+      border: 1.5px solid var(--gray-mid);
+      padding: 11px;
+      border-radius: 30px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .9rem;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+
+    .btn-oauth:hover { border-color: #ccc; box-shadow: var(--shadow-sm); }
+
+    .login-footer { text-align: center; margin-top: 22px; font-size: .85rem; color: var(--gray-text); }
+    .login-footer a { color: var(--green-dark); text-decoration: none; font-weight: 500; }
+
+    /* Queue-it notice */
+    .queueit-notice {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: var(--green-light);
+      border: 1px solid var(--green-mid);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      margin-bottom: 24px;
+      font-size: .82rem;
+      color: var(--green-dark);
+    }
+
+    .queueit-notice svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; fill: var(--green-dark); }
+
+    /* ── PRODUCT LIST ── */
+    .products-header {
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-mid);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .products-header h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+
+    .products-header span { color: var(--gray-text); font-size: .85rem; }
+
+    .search-bar {
+      position: relative;
+      width: 240px;
+    }
+
+    .search-bar input {
+      width: 100%;
+      padding: 9px 14px 9px 38px;
+      border: 1.5px solid var(--gray-mid);
+      border-radius: 30px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .88rem;
+      outline: none;
+      background: var(--gray);
+      transition: border-color var(--transition);
+    }
+
+    .search-bar input:focus { border-color: var(--green); background: var(--white); }
+
+    .search-bar svg {
+      position: absolute;
+      left: 11px; top: 50%;
+      transform: translateY(-50%);
+      width: 16px; height: 16px;
+      stroke: var(--gray-text);
+      fill: none; stroke-width: 2;
+      pointer-events: none;
+    }
+
+    .products-grid {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .product-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--gray-mid);
+      overflow: hidden;
+      transition: box-shadow var(--transition), transform var(--transition);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .product-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+
+    .product-img-wrap {
+      position: relative;
+      aspect-ratio: 4/3;
+      overflow: hidden;
+      background: var(--gray);
+    }
+
+    .product-img-wrap img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform .5s ease;
+    }
+
+    .product-card:hover .product-img-wrap img { transform: scale(1.04); }
+
+    .product-body { padding: 16px 18px 18px; flex: 1; display: flex; flex-direction: column; }
+
+    .product-category {
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--green-dark);
+      margin-bottom: 4px;
+    }
+
+    .product-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+
+    .product-desc { font-size: .82rem; color: var(--gray-text); flex: 1; margin-bottom: 14px; line-height: 1.5; }
+
+    .product-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .product-price {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--black);
+    }
+
+    .btn-add {
+      background: var(--green);
+      color: var(--white);
+      border: none;
+      padding: 9px 18px;
+      border-radius: 30px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    .btn-add:hover { background: var(--green-dark); box-shadow: 0 4px 14px rgba(0,200,50,.35); }
+    .btn-add:active { transform: scale(.96); }
+    .btn-add.loading { opacity: .7; pointer-events: none; }
+    .btn-add.added { background: var(--black); }
+
+    .btn-add svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.5; }
+
+    /* ── CART DRAWER ── */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s ease;
+    }
+
+    .drawer-overlay.open { opacity: 1; pointer-events: all; }
+
+    .cart-drawer {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: min(400px, 100vw);
+      background: var(--white);
+      z-index: 201;
+      transform: translateX(100%);
+      transition: transform .35s cubic-bezier(.4,0,.2,1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: -8px 0 40px rgba(0,0,0,.15);
+    }
+
+    .cart-drawer.open { transform: none; }
+
+    .drawer-head {
+      background: var(--green);
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .drawer-head h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--white);
+    }
+
+    .drawer-close {
+      background: rgba(255,255,255,.2);
+      border: none;
+      cursor: pointer;
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--white);
+      font-size: 1.2rem;
+      transition: background var(--transition);
+    }
+
+    .drawer-close:hover { background: rgba(255,255,255,.35); }
+
+    .drawer-items { flex: 1; overflow-y: auto; padding: 16px; }
+
+    .cart-item {
+      display: flex;
+      gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--gray-mid);
+      animation: fadeIn .25s ease;
+    }
+
+    .cart-item img {
+      width: 64px; height: 64px;
+      object-fit: cover;
+      border-radius: var(--radius-sm);
+      background: var(--gray);
+    }
+
+    .cart-item-info { flex: 1; }
+    .cart-item-name { font-weight: 600; font-size: .9rem; margin-bottom: 2px; }
+    .cart-item-price { color: var(--green-dark); font-weight: 600; font-size: .88rem; }
+
+    .cart-item-remove {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--gray-text);
+      font-size: 1.1rem;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: color var(--transition);
+    }
+
+    .cart-item-remove:hover { color: #e53e3e; }
+
+    .cart-empty {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--gray-text);
+    }
+
+    .cart-empty svg { width: 56px; height: 56px; stroke: var(--gray-mid); fill: none; stroke-width: 1.5; margin-bottom: 14px; }
+    .cart-empty p { font-size: .9rem; }
+
+    .drawer-foot {
+      padding: 18px 20px;
+      border-top: 1px solid var(--gray-mid);
+      background: var(--white);
+    }
+
+    .cart-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .cart-total span { font-size: .9rem; color: var(--gray-text); }
+
+    .cart-total strong {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .btn-checkout {
+      width: 100%;
+      background: var(--green);
+      color: var(--white);
+      border: none;
+      padding: 14px;
+      border-radius: 30px;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      font-size: .98rem;
+      cursor: pointer;
+      transition: background var(--transition);
+      box-shadow: 0 4px 14px rgba(0,200,50,.3);
+    }
+
+    .btn-checkout:hover { background: var(--green-dark); }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 28px; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--black);
+      color: var(--white);
+      padding: 11px 20px;
+      border-radius: 30px;
+      font-size: .88rem;
+      font-weight: 500;
+      z-index: 300;
+      transition: transform .4s cubic-bezier(.34,1.56,.64,1), opacity .4s ease;
+      opacity: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      box-shadow: 0 6px 24px rgba(0,0,0,.3);
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    .toast .dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--black);
+      color: rgba(255,255,255,.5);
+      text-align: center;
+      padding: 28px 24px;
+      font-size: .82rem;
+    }
+
+    footer a { color: var(--green); text-decoration: none; }
+
+    /* ── SPINNER ── */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.4);
+      border-top-color: var(--white);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: inline-block;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 520px) {
+      .nav-links button:not(.active) { display: none; }
+      .nav-links { gap: 2px; }
+      .products-grid { padding: 16px; grid-template-columns: 1fr; }
+      .login-card { padding: 28px 20px; }
+      .search-bar { width: 100%; }
+      .products-header { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAVIGATION ── -->
+<nav>
+  <div class="nav-logo" onclick="navigate('home')">
+    <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6" stroke="rgba(0,200,50,.7)" stroke-width="2"/><path d="M16 10a4 4 0 01-8 0" fill="none" stroke="rgba(0,200,50,.7)" stroke-width="2"/></svg>
+    Queue-it Retail
+  </div>
+  <div class="nav-links">
+    <button id="nav-home" class="active" onclick="navigate('home')">Home</button>
+    <button id="nav-login" onclick="navigate('login')">Log-in</button>
+    <button id="nav-products" onclick="navigate('products')">Products</button>
+  </div>
+  <button class="cart-btn" onclick="toggleCart()" aria-label="Open cart">
+    <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0"/></svg>
+    <span class="cart-badge" id="cart-badge">0</span>
+  </button>
+</nav>
+
+<!-- ── HOME PAGE ── -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-eyebrow">Queue-it Protected Experience</div>
+    <h1>Fair Access.<br>Every Drop.</h1>
+    <p>The Queue-it Retail demo showcases seamless virtual waiting room integration — Simple and Hybrid — so every customer gets a fair shot.</p>
+    <div class="hero-ctas">
+      <button class="btn-primary" onclick="navigate('products')">Browse Products</button>
+      <button class="btn-secondary" onclick="navigate('login')">Sign In</button>
+    </div>
+  </div>
+
+  <div class="features">
+    <div class="feature-item">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <h3>Queue-it Protected</h3>
+      <p>Bot-proof access control built in</p>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      </div>
+      <h3>Simple Integration</h3>
+      <p>Protect your login with a waiting room</p>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </div>
+      <h3>Hybrid Integration</h3>
+      <p>Gate product pages for high-demand drops</p>
+    </div>
+    <div class="feature-item">
+      <div class="feature-icon">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <h3>Real-time Queue</h3>
+      <p>Live position updates as you wait</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">How It Works</div>
+    <h2>Two Ways to Integrate</h2>
+    <p>Queue-it's Retail Demo shows both integration patterns side-by-side so you can choose the right fit for your use case.</p>
+    <div class="integration-cards">
+      <div class="integration-card">
+        <span class="tag">Simple</span>
+        <h3>Log-in Integration</h3>
+        <p>Protect your authentication flow. Customers queue before they can log in, preventing credential-stuffing bots from overwhelming your system during peak events.</p>
+      </div>
+      <div class="integration-card">
+        <span class="tag">Hybrid</span>
+        <h3>Product List Integration</h3>
+        <p>Gate access to product detail pages directly. When a high-demand item drops, only validated customers advance past the waiting room to add items to their cart.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── LOGIN PAGE ── -->
+<div class="page" id="page-login">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-icon">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <h2>Welcome back</h2>
+      <p class="subtitle">Sign in to your Queue-it Retail account</p>
+
+      <div class="queueit-notice">
+        <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>This login is protected by a <strong>Queue-it waiting room</strong> (Simple Integration demo).</span>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Email address</label>
+        <input type="email" id="email" placeholder="you@example.com" autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <div class="forgot"><a href="#" onclick="return false">Forgot password?</a></div>
+      <button class="btn-login" onclick="handleLogin(this)">Sign In</button>
+
+      <div class="login-divider">or continue with</div>
+      <button class="btn-oauth">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Continue with Google
+      </button>
+
+      <div class="login-footer">
+        Don't have an account? <a href="#" onclick="return false">Sign up</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PRODUCT LIST PAGE ── -->
+<div class="page" id="page-products">
+  <div class="products-header">
+    <div>
+      <h2>Product Catalog</h2>
+      <span>Queue-it Hybrid Integration demo</span>
+    </div>
+    <div class="search-bar">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" placeholder="Search products…" oninput="filterProducts(this.value)" />
+    </div>
+  </div>
+
+  <div class="products-grid" id="products-grid">
+    <!-- populated by JS -->
+  </div>
+</div>
+
+<!-- ── CART DRAWER ── -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="toggleCart()"></div>
+<div class="cart-drawer" id="cart-drawer">
+  <div class="drawer-head">
+    <h3>🛒 Your Cart</h3>
+    <button class="drawer-close" onclick="toggleCart()">✕</button>
+  </div>
+  <div class="drawer-items" id="drawer-items">
+    <div class="cart-empty">
+      <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0"/></svg>
+      <p>Your cart is empty.<br>Browse the product list to get started.</p>
+    </div>
+  </div>
+  <div class="drawer-foot">
+    <div class="cart-total">
+      <span>Total</span>
+      <strong id="cart-total">$0.00</strong>
+    </div>
+    <button class="btn-checkout" onclick="handleCheckout()">Proceed to Checkout</button>
+  </div>
+</div>
+
+<!-- ── TOAST ── -->
+<div class="toast" id="toast"><span class="dot"></span><span id="toast-msg"></span></div>
+
+<footer>
+  &copy; 2026 Queue-it Retail Demo &mdash; Powered by <a href="https://queue-it.com" target="_blank">Queue-it</a>
+</footer>
+
+<script>
+  /* ── PRODUCTS DATA ── */
+  const PRODUCTS = [
+    {
+      id: 'wireless-headphones',
+      name: 'Wireless Headphones',
+      category: 'Audio',
+      price: 129,
+      desc: 'Premium over-ear wireless headphones with active noise cancellation and 30-hour battery life.',
+      img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80&auto=format&fit=crop'
+    },
+    {
+      id: 'smart-watch',
+      name: 'Smart Watch',
+      category: 'Wearables',
+      price: 349,
+      desc: 'Always-on display, GPS, heart rate monitoring, and 7-day battery with sleek aluminum case.',
+      img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80&auto=format&fit=crop'
+    },
+    {
+      id: 'premium-sneakers',
+      name: 'Premium Sneakers',
+      category: 'Footwear',
+      price: 89,
+      desc: 'Lightweight performance sneakers with responsive foam cushioning and breathable mesh upper.',
+      img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80&auto=format&fit=crop'
+    },
+    {
+      id: 'organic-cotton-tee',
+      name: 'Organic Cotton Tee',
+      category: 'Apparel',
+      price: 39,
+      desc: 'Sustainably sourced 100% organic cotton. Relaxed fit, pre-washed for softness right out of the bag.',
+      img: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80&auto=format&fit=crop'
+    },
+    {
+      id: 'fitness-tracker',
+      name: 'Fitness Tracker',
+      category: 'Wearables',
+      price: 199,
+      desc: 'Track steps, sleep, calories, and workouts. Water-resistant with a slim profile and 14-day battery.',
+      img: 'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?w=600&q=80&auto=format&fit=crop'
+    },
+    {
+      id: 'bluetooth-speaker',
+      name: 'Bluetooth Speaker',
+      category: 'Audio',
+      price: 79,
+      desc: '360° room-filling sound, IPX7 waterproof rating, and 12-hour playtime in a compact design.',
+      img: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=600&q=80&auto=format&fit=crop'
+    }
+  ];
+
+  /* ── STATE ── */
+  let cart = [];
+  let allProducts = [...PRODUCTS];
+
+  /* ── NAVIGATION ── */
+  const ROUTES = {
+    '':         'home',
+    '/':        'home',
+    '/login':   'login',
+    '/products':'products',
+  };
+
+  const PATH_FOR = { home: '/', login: '/login', products: '/products' };
+
+  function navigate(page, pushState = true) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-links button').forEach(b => b.classList.remove('active'));
+
+    const pageMap = { home: 'page-home', login: 'page-login', products: 'page-products' };
+    const navMap  = { home: 'nav-home',  login: 'nav-login',  products: 'nav-products' };
+
+    document.getElementById(pageMap[page]).classList.add('active');
+    document.getElementById(navMap[page]).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    if (pushState) {
+      history.pushState({ page }, '', PATH_FOR[page]);
+    }
+
+    // Announce the URL change to external frameworks (Queue-it, analytics, etc.)
+    // 1. Custom 'urlchange' event — any listener can subscribe to this
+    window.dispatchEvent(new CustomEvent('urlchange', {
+      bubbles: true,
+      detail: { page, path: PATH_FOR[page] }
+    }));
+    // 2. Synthetic popstate — frameworks that patch history.pushState or
+    //    listen on popstate (e.g. Queue-it config loader) will re-evaluate
+    window.dispatchEvent(new PopStateEvent('popstate', { state: { page } }));
+
+    // 3. Trigger Queue-it user validation on every route change so the
+    //    waiting room is enforced regardless of which page the user lands on.
+    validateQueueItUser();
+
+    if (page === 'products') renderProducts(allProducts);
+  }
+
+  /* Handle browser back/forward */
+  window.addEventListener('popstate', e => {
+    // Guard against our own synthetic popstate events re-triggering navigation
+    if (e.isTrusted === false) return;
+    const page = (e.state && e.state.page) || ROUTES[location.pathname] || 'home';
+    navigate(page, false);
+  });
+
+  /* On initial load, read the URL path */
+  function bootRoute() {
+    const page = ROUTES[location.pathname] || 'home';
+    navigate(page, false);
+    // Replace the initial history entry so popstate fires correctly on first back
+    history.replaceState({ page }, '', PATH_FOR[page]);
+  }
+
+  /* ── PRODUCT RENDER ── */
+  function renderProducts(products) {
+    const grid = document.getElementById('products-grid');
+    if (!products.length) {
+      grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:var(--gray-text);padding:40px">No products found.</p>';
+      return;
+    }
+    grid.innerHTML = products.map(p => `
+      <div class="product-card" id="card-${p.id}">
+        <div class="product-img-wrap">
+          <img src="${p.img}" alt="${p.name}" loading="lazy" />
+        </div>
+        <div class="product-body">
+          <div class="product-category">${p.category}</div>
+          <div class="product-name">${p.name}</div>
+          <div class="product-desc">${p.desc}</div>
+          <div class="product-footer">
+            <div class="product-price">$${p.price}</div>
+            <button class="btn-add" id="btn-${p.id}" onclick="addToCart('${p.id}', this)">
+              <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add to Cart
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function filterProducts(query) {
+    const q = query.toLowerCase();
+    const filtered = PRODUCTS.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      p.category.toLowerCase().includes(q) ||
+      p.desc.toLowerCase().includes(q)
+    );
+    renderProducts(filtered);
+  }
+
+  /* ── ADD TO CART (AJAX simulation mirroring mobile hybrid pattern) ── */
+  async function addToCart(productId, btn) {
+    const product = PRODUCTS.find(p => p.id === productId);
+    if (!product) return;
+
+    // Loading state
+    btn.classList.add('loading');
+    btn.innerHTML = '<span class="spinner"></span> Adding…';
+
+    try {
+      // Queue-it Hybrid Integration: simulate the product fetch/token validation
+      // In the mobile app this calls Queue-it's protected endpoint before allowing
+      // the add-to-cart action to proceed. We mirror that async pattern here.
+      const response = await fetchProductWithQueueIt(product);
+
+      if (!response.ok) throw new Error('Queue-it check failed');
+
+      // Successfully validated — add to cart
+      const existing = cart.find(i => i.id === productId);
+      if (existing) {
+        existing.qty++;
+      } else {
+        cart.push({ ...product, qty: 1 });
+      }
+
+      updateCartUI();
+
+      btn.classList.remove('loading');
+      btn.classList.add('added');
+      btn.innerHTML = `
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        Added!
+      `;
+
+      showToast(`${product.name} added to cart`);
+
+      // Reset button after 2.4 s
+      setTimeout(() => {
+        btn.classList.remove('added');
+        btn.innerHTML = `
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add to Cart
+        `;
+      }, 2400);
+
+    } catch (err) {
+      btn.classList.remove('loading');
+      btn.innerHTML = `
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add to Cart
+      `;
+      showToast('Something went wrong. Please try again.');
+      console.error('Add to cart error:', err);
+    }
+  }
+
+  /**
+   * Queue-it Hybrid Integration — product fetch gate.
+   * Mirrors the mobile SDK pattern: resolve the Queue-it token first,
+   * then request the protected product resource.
+   *
+   * In production this points at your Queue-it protected API endpoint.
+   * The demo resolves immediately to simulate a passed waiting room token.
+   */
+  function fetchProductWithQueueIt(product) {
+    const QUEUEIT_CUSTOMER_ID = 'your-customerid';          // ← replace in prod
+    const QUEUEIT_EVENT_ID    = 'retail-demo';              // ← replace in prod
+    const PRODUCT_ENDPOINT    = `/api/products/${product.id}`; // ← your real endpoint
+
+    // Simulate the async network round-trip (Queue-it token check + product fetch)
+    // Replace this block with a real fetch() once your Queue-it event is configured:
+    //
+    //   return fetch(PRODUCT_ENDPOINT, {
+    //     headers: { 'X-QueueIt-Token': resolvedToken }
+    //   });
+    //
+    return new Promise(resolve =>
+      setTimeout(() => resolve({ ok: true, product }), 680)
+    );
+  }
+
+  /* ── CART UI ── */
+  function updateCartUI() {
+    const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+    const count = cart.reduce((s, i) => s + i.qty, 0);
+
+    // Badge
+    const badge = document.getElementById('cart-badge');
+    badge.textContent = count;
+    badge.style.display = count > 0 ? 'flex' : 'none';
+
+    // Total
+    document.getElementById('cart-total').textContent = `$${total.toFixed(2)}`;
+
+    // Items
+    const container = document.getElementById('drawer-items');
+    if (!cart.length) {
+      container.innerHTML = `
+        <div class="cart-empty">
+          <svg viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4zM3 6h18M16 10a4 4 0 01-8 0"/></svg>
+          <p>Your cart is empty.<br>Browse the product list to get started.</p>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = cart.map(item => `
+      <div class="cart-item">
+        <img src="${item.img}" alt="${item.name}" />
+        <div class="cart-item-info">
+          <div class="cart-item-name">${item.name}${item.qty > 1 ? ` ×${item.qty}` : ''}</div>
+          <div class="cart-item-price">$${(item.price * item.qty).toFixed(2)}</div>
+        </div>
+        <button class="cart-item-remove" onclick="removeFromCart('${item.id}')" title="Remove">✕</button>
+      </div>
+    `).join('');
+  }
+
+  function removeFromCart(productId) {
+    cart = cart.filter(i => i.id !== productId);
+    updateCartUI();
+  }
+
+  /* ── CART DRAWER ── */
+  function toggleCart() {
+    const overlay = document.getElementById('drawer-overlay');
+    const drawer  = document.getElementById('cart-drawer');
+    overlay.classList.toggle('open');
+    drawer.classList.toggle('open');
+  }
+
+  /* ── CHECKOUT ── */
+  function handleCheckout() {
+    if (!cart.length) { showToast('Your cart is empty!'); return; }
+    showToast('Checkout flow coming soon — Queue-it protected!');
+    toggleCart();
+  }
+
+  /* ── LOGIN ── */
+  async function handleLogin(btn) {
+    const email = document.getElementById('email').value.trim();
+    const pass  = document.getElementById('password').value;
+    if (!email || !pass) { showToast('Please enter your email and password.'); return; }
+
+    btn.textContent = 'Signing in…';
+    btn.disabled = true;
+
+    // Simulate Queue-it Simple Integration delay (waiting room token resolution)
+    await new Promise(r => setTimeout(r, 1000));
+
+    btn.textContent = 'Sign In';
+    btn.disabled = false;
+    showToast('Demo login — Queue-it Simple Integration simulated ✓');
+  }
+
+  /* ── TOAST ── */
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toast-msg').textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  /* ── QUEUE-IT VALIDATION ── */
+  function validateQueueItUser() {
+    // QueueIt is loaded asynchronously via queueconfigloader.min.js.
+    // Poll until the global is available, then call validateUser().
+    if (window.QueueIt && typeof window.QueueIt.validateUser === 'function') {
+      window.QueueIt.validateUser();
+    } else {
+      // SDK not ready yet — retry once after a short delay
+      setTimeout(() => {
+        if (window.QueueIt && typeof window.QueueIt.validateUser === 'function') {
+          window.QueueIt.validateUser();
+        }
+      }, 500);
+    }
+  }
+
+  /* ── INIT ── */
+  renderProducts(PRODUCTS);
+  bootRoute();
+</script>
+</body>
+</html>
