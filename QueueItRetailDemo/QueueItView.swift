@@ -12,7 +12,7 @@ public struct ShopItRootView: View {
     public var body: some View {
         Group {
             if viewModel.loginComplete {
-                ProductListView(viewModel: viewModel)
+                ShopItProductListView(viewModel: viewModel)
             } else {
                 LoginView(viewModel: viewModel)
             }
@@ -26,7 +26,6 @@ public struct ShopItRootView: View {
 
     @ViewBuilder
     private var queueWebViewContent: some View {
-        // Show hybrid manager's WebView if it is active; otherwise simple.
         if viewModel.hybridManager.showWebView,
            let manager = viewModel.hybridManager.viewManager {
             QueueWebViewContainer(
@@ -54,9 +53,8 @@ struct LoginView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Background gradient matching Shop-it demo palette
                 LinearGradient(
-                    colors: [Color(hex: "#1a1a2e"), Color(hex: "#16213e")],
+                    colors: [Color(hex: "1a1a2e"), Color(hex: "16213e")],
                     startPoint: .topLeading, endPoint: .bottomTrailing
                 )
                 .ignoresSafeArea()
@@ -134,7 +132,7 @@ struct LoginView: View {
 
 // MARK: - Product list (Hybrid integration)
 
-struct ProductListView: View {
+struct ShopItProductListView: View {
     @ObservedObject var viewModel: QueueItViewModel
 
     let columns = [GridItem(.adaptive(minimum: 160), spacing: 16)]
@@ -178,7 +176,6 @@ struct ProductListView: View {
 
     private var productGrid: some View {
         ScrollView {
-            // Hybrid integration badge
             HStack(spacing: 6) {
                 Image(systemName: "server.rack")
                     .foregroundStyle(.blue)
@@ -190,7 +187,9 @@ struct ProductListView: View {
 
             LazyVGrid(columns: columns, spacing: 16) {
                 ForEach(viewModel.products) { product in
-                    ProductCard(product: product)
+                    ProductCardView(product: product) {
+                        // Add to cart action — wire up as needed
+                    }
                 }
             }
             .padding()
@@ -209,48 +208,6 @@ struct ProductListView: View {
         default:
             EmptyView()
         }
-    }
-}
-
-// MARK: - Product card
-
-struct ProductCard: View {
-    let product: Product
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            AsyncImage(url: product.imageURL.flatMap(URL.init)) { image in
-                image.resizable().scaledToFill()
-            } placeholder: {
-                Rectangle().fill(Color(.systemGray5))
-                    .overlay(Image(systemName: "photo").foregroundStyle(.secondary))
-            }
-            .frame(height: 140)
-            .clipped()
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(product.name)
-                    .font(.subheadline.bold())
-                    .lineLimit(2)
-                Text("$\(product.price, specifier: "%.2f")")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-            }
-            .padding(.horizontal, 4)
-
-            Button("Add to Cart") {}
-                .font(.caption.bold())
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 8)
-                .background(Color.accentColor)
-                .foregroundStyle(.white)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-        }
-        .padding(10)
-        .background(Color(.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 14))
-        .shadow(color: .black.opacity(0.06), radius: 6, y: 3)
     }
 }
 
@@ -280,19 +237,5 @@ struct FloatingTextField: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(.white.opacity(0.2), lineWidth: 1)
         )
-    }
-}
-
-// MARK: - Color hex helper
-
-extension Color {
-    init(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
-        let r = Double((int >> 16) & 0xFF) / 255
-        let g = Double((int >> 8)  & 0xFF) / 255
-        let b = Double(int         & 0xFF) / 255
-        self.init(red: r, green: g, blue: b)
     }
 }
