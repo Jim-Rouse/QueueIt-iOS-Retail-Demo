@@ -18,10 +18,6 @@ struct QueueItRetailDemoApp: App {
         let dataStore = WKWebsiteDataStore.default()
         dataStore.removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(),
                              modifiedSince: .distantPast) {}
-
-        // ← NEW: Apply blue nav bar matching splash screen
-        ProductListView.configureNavBarAppearance()
-        QueueItNetworkLogger.register()
     }
 
     var body: some Scene {
