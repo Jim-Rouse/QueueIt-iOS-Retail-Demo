@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  LaunchLogo.svg
+  Shop-it wordmark — white, for placement on BrandBlue splash screen.
+  Export at 3x for @3x asset: 540×180px
+  Export at 2x for @2x asset: 360×120px
+  Export at 1x for @1x asset: 180×60px
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 120" width="360" height="120">
+  <!-- Shopping bag icon mark -->
+  <g transform="translate(20, 18)">
+    <!-- Bag body -->
+    <rect x="0" y="28" width="56" height="58" rx="6" ry="6"
+          fill="none" stroke="white" stroke-width="4.5"/>
+    <!-- Bag handles -->
+    <path d="M14 28 C14 10 42 10 42 28"
+          fill="none" stroke="white" stroke-width="4.5" stroke-linecap="round"/>
+    <!-- Shine dot -->
+    <circle cx="40" cy="50" r="3.5" fill="white" opacity="0.6"/>
+  </g>
+
+  <!-- "Shop-it" wordmark -->
+  <text x="95" y="76"
+        font-family="SF Pro Display, -apple-system, Helvetica Neue, sans-serif"
+        font-weight="700"
+        font-size="48"
+        fill="white"
+        letter-spacing="-1">Shop-it</text>
+
+  <!-- Tagline -->
+  <text x="95" y="100"
+        font-family="SF Pro Text, -apple-system, Helvetica Neue, sans-serif"
+        font-weight="400"
+        font-size="15"
+        fill="white"
+        opacity="0.7"
+        letter-spacing="0.5">Fair Access. Every Drop.</text>
+</svg>

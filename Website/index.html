@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Queue-it Retail</title>
+  <title>Shop-it</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
   <link rel="apple-touch-icon" href="favicon.svg" />
@@ -21,10 +21,11 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --green: #00C832;
-      --green-dark: #00a828;
-      --green-light: #e6faea;
-      --green-mid: #b3f0c2;
+      --blue: #262bed;
+      --blue-dark: #1b1fbe;
+      --blue-deeper: #141799;
+      --blue-light: #eaebfd;
+      --blue-mid: #b3b6f7;
       --black: #0d0d0d;
       --gray: #f4f5f6;
       --gray-mid: #e8eaed;
@@ -53,28 +54,27 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      background: var(--green);
+      background: var(--blue);
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 24px;
       height: 64px;
-      box-shadow: 0 2px 12px rgba(0,200,50,.35);
+      box-shadow: 0 2px 12px rgba(38,43,237,.35);
     }
 
     .nav-logo {
-      font-family: 'Syne', sans-serif;
-      font-weight: 800;
-      font-size: 1.25rem;
-      color: var(--white);
-      letter-spacing: -.01em;
       display: flex;
       align-items: center;
-      gap: 10px;
       cursor: pointer;
     }
 
-    .nav-logo svg { width: 28px; height: 28px; fill: var(--white); }
+    .nav-logo img {
+      height: 32px;
+      width: auto;
+      display: block;
+      filter: brightness(0) invert(1); /* force white so it shows on blue */
+    }
 
     .nav-links {
       display: flex;
@@ -142,19 +142,39 @@
 
     /* ── HOME ── */
     .hero {
-      background: linear-gradient(135deg, var(--green) 0%, #00a020 100%);
-      padding: 80px 24px 100px;
-      text-align: center;
+      background: linear-gradient(135deg, var(--blue) 0%, var(--blue-deeper) 100%);
+      padding: 0 24px 0 64px;
       position: relative;
       overflow: hidden;
+      min-height: 480px;
+      display: flex;
+      align-items: stretch;
     }
 
     .hero::before {
       content: '';
       position: absolute;
       inset: 0;
-      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Ccircle cx='30' cy='30' r='4'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
       pointer-events: none;
+    }
+
+    .hero-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      gap: 40px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-text {
+      flex: 1;
+      padding: 72px 0;
+      max-width: 480px;
     }
 
     .hero-eyebrow {
@@ -173,7 +193,7 @@
     .hero h1 {
       font-family: 'Syne', sans-serif;
       font-weight: 800;
-      font-size: clamp(2.2rem, 6vw, 3.6rem);
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
       color: var(--white);
       line-height: 1.1;
       margin-bottom: 18px;
@@ -183,21 +203,48 @@
     .hero p {
       color: rgba(255,255,255,.82);
       font-size: 1.05rem;
-      max-width: 520px;
-      margin: 0 auto 32px;
+      max-width: 420px;
+      margin-bottom: 32px;
       font-weight: 300;
     }
 
     .hero-ctas {
       display: flex;
       gap: 12px;
-      justify-content: center;
       flex-wrap: wrap;
+    }
+
+    .hero-image-wrap {
+      flex-shrink: 0;
+      width: 380px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      align-self: stretch;
+      position: relative;
+    }
+
+    .hero-image-wrap img {
+      width: 100%;
+      max-width: 420px;
+      object-fit: contain;
+      object-position: bottom;
+      display: block;
+      /* subtle drop shadow to lift product off the gradient */
+      filter: drop-shadow(0 24px 40px rgba(0,0,20,.35));
+    }
+
+    @media (max-width: 768px) {
+      .hero { padding: 0 24px; }
+      .hero-inner { flex-direction: column; gap: 0; }
+      .hero-text { padding: 56px 0 20px; }
+      .hero-image-wrap { width: 100%; max-height: 220px; overflow: hidden; align-items: center; }
+      .hero-image-wrap img { max-width: 280px; }
     }
 
     .btn-primary {
       background: var(--white);
-      color: var(--green-dark);
+      color: var(--blue-dark);
       border: none;
       padding: 13px 28px;
       border-radius: 30px;
@@ -244,7 +291,7 @@
 
     .feature-icon {
       width: 44px; height: 44px;
-      background: var(--green-light);
+      background: var(--blue-light);
       border-radius: 12px;
       display: flex;
       align-items: center;
@@ -252,7 +299,7 @@
       margin: 0 auto 12px;
     }
 
-    .feature-icon svg { width: 22px; height: 22px; stroke: var(--green-dark); fill: none; stroke-width: 2; }
+    .feature-icon svg { width: 22px; height: 22px; stroke: var(--blue-dark); fill: none; stroke-width: 2; }
 
     .feature-item h3 {
       font-family: 'Syne', sans-serif;
@@ -262,6 +309,109 @@
     }
 
     .feature-item p { font-size: .82rem; color: var(--gray-text); }
+
+    /* ── FEATURED PRODUCTS (landing page) ── */
+    .featured-section {
+      padding: 56px 24px 64px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .featured-section .section-label {
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--blue-dark);
+      margin-bottom: 8px;
+    }
+
+    .featured-section h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 700;
+      letter-spacing: -.02em;
+      margin-bottom: 28px;
+    }
+
+    .featured-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 18px;
+    }
+
+    .featured-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      border: 1px solid var(--gray-mid);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow var(--transition), transform var(--transition);
+      cursor: pointer;
+    }
+
+    .featured-card:hover { box-shadow: var(--shadow-md); transform: translateY(-3px); }
+
+    .featured-card-img {
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      background: var(--gray);
+    }
+
+    .featured-card-img img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform .5s ease;
+    }
+
+    .featured-card:hover .featured-card-img img { transform: scale(1.05); }
+
+    .featured-card-body {
+      padding: 14px 16px 16px;
+    }
+
+    .featured-card-cat {
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--blue-dark);
+      margin-bottom: 3px;
+    }
+
+    .featured-card-name {
+      font-family: 'Syne', sans-serif;
+      font-size: .95rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .featured-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .featured-card-price {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .featured-card-btn {
+      background: var(--blue);
+      color: var(--white);
+      border: none;
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+
+    .featured-card-btn:hover { background: var(--blue-dark); }
 
     /* Integration section */
     .section {
@@ -275,7 +425,7 @@
       font-weight: 600;
       letter-spacing: .14em;
       text-transform: uppercase;
-      color: var(--green-dark);
+      color: var(--blue-dark);
       margin-bottom: 8px;
     }
 
@@ -311,8 +461,8 @@
 
     .integration-card .tag {
       display: inline-block;
-      background: var(--green-light);
-      color: var(--green-dark);
+      background: var(--blue-light);
+      color: var(--blue-dark);
       font-size: .72rem;
       font-weight: 600;
       letter-spacing: .06em;
@@ -351,12 +501,12 @@
       position: absolute;
       top: 0; left: 0; right: 0;
       height: 4px;
-      background: linear-gradient(90deg, var(--green), #00e850);
+      background: linear-gradient(90deg, var(--blue), #6b70f5);
     }
 
     .login-icon {
       width: 56px; height: 56px;
-      background: var(--green-light);
+      background: var(--blue-light);
       border-radius: 16px;
       display: flex;
       align-items: center;
@@ -364,7 +514,7 @@
       margin-bottom: 20px;
     }
 
-    .login-icon svg { width: 28px; height: 28px; stroke: var(--green-dark); fill: none; stroke-width: 2; }
+    .login-icon svg { width: 28px; height: 28px; stroke: var(--blue-dark); fill: none; stroke-width: 2; }
 
     .login-card h2 {
       font-family: 'Syne', sans-serif;
@@ -399,18 +549,18 @@
     }
 
     .form-group input:focus {
-      border-color: var(--green);
+      border-color: var(--blue);
       background: var(--white);
-      box-shadow: 0 0 0 3px rgba(0,200,50,.12);
+      box-shadow: 0 0 0 3px rgba(38,43,237,.1);
     }
 
     .forgot { text-align: right; margin-top: -10px; margin-bottom: 22px; }
-    .forgot a { color: var(--green-dark); font-size: .82rem; text-decoration: none; }
+    .forgot a { color: var(--blue-dark); font-size: .82rem; text-decoration: none; }
     .forgot a:hover { text-decoration: underline; }
 
     .btn-login {
       width: 100%;
-      background: var(--green);
+      background: var(--blue);
       color: var(--white);
       border: none;
       padding: 13px;
@@ -420,10 +570,10 @@
       font-weight: 600;
       cursor: pointer;
       transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
-      box-shadow: 0 4px 16px rgba(0,200,50,.30);
+      box-shadow: 0 4px 16px rgba(38,43,237,.30);
     }
 
-    .btn-login:hover { background: var(--green-dark); transform: translateY(-1px); box-shadow: 0 6px 22px rgba(0,200,50,.4); }
+    .btn-login:hover { background: var(--blue-dark); transform: translateY(-1px); box-shadow: 0 6px 22px rgba(38,43,237,.4); }
     .btn-login:active { transform: none; }
 
     .login-divider {
@@ -462,23 +612,23 @@
     .btn-oauth:hover { border-color: #ccc; box-shadow: var(--shadow-sm); }
 
     .login-footer { text-align: center; margin-top: 22px; font-size: .85rem; color: var(--gray-text); }
-    .login-footer a { color: var(--green-dark); text-decoration: none; font-weight: 500; }
+    .login-footer a { color: var(--blue-dark); text-decoration: none; font-weight: 500; }
 
     /* Queue-it notice */
     .queueit-notice {
       display: flex;
       align-items: flex-start;
       gap: 10px;
-      background: var(--green-light);
-      border: 1px solid var(--green-mid);
+      background: var(--blue-light);
+      border: 1px solid var(--blue-mid);
       border-radius: var(--radius-sm);
       padding: 12px 14px;
       margin-bottom: 24px;
       font-size: .82rem;
-      color: var(--green-dark);
+      color: var(--blue-dark);
     }
 
-    .queueit-notice svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; fill: var(--green-dark); }
+    .queueit-notice svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; fill: var(--blue-dark); }
 
     /* ── PRODUCT LIST ── */
     .products-header {
@@ -517,7 +667,7 @@
       transition: border-color var(--transition);
     }
 
-    .search-bar input:focus { border-color: var(--green); background: var(--white); }
+    .search-bar input:focus { border-color: var(--blue); background: var(--white); }
 
     .search-bar svg {
       position: absolute;
@@ -573,7 +723,7 @@
       font-weight: 600;
       letter-spacing: .1em;
       text-transform: uppercase;
-      color: var(--green-dark);
+      color: var(--blue-dark);
       margin-bottom: 4px;
     }
 
@@ -602,7 +752,7 @@
     }
 
     .btn-add {
-      background: var(--green);
+      background: var(--blue);
       color: var(--white);
       border: none;
       padding: 9px 18px;
@@ -618,7 +768,7 @@
       white-space: nowrap;
     }
 
-    .btn-add:hover { background: var(--green-dark); box-shadow: 0 4px 14px rgba(0,200,50,.35); }
+    .btn-add:hover { background: var(--blue-dark); box-shadow: 0 4px 14px rgba(38,43,237,.35); }
     .btn-add:active { transform: scale(.96); }
     .btn-add.loading { opacity: .7; pointer-events: none; }
     .btn-add.added { background: var(--black); }
@@ -654,7 +804,7 @@
     .cart-drawer.open { transform: none; }
 
     .drawer-head {
-      background: var(--green);
+      background: var(--blue);
       padding: 18px 20px;
       display: flex;
       align-items: center;
@@ -703,7 +853,7 @@
 
     .cart-item-info { flex: 1; }
     .cart-item-name { font-weight: 600; font-size: .9rem; margin-bottom: 2px; }
-    .cart-item-price { color: var(--green-dark); font-weight: 600; font-size: .88rem; }
+    .cart-item-price { color: var(--blue-dark); font-weight: 600; font-size: .88rem; }
 
     .cart-item-remove {
       background: none;
@@ -750,7 +900,7 @@
 
     .btn-checkout {
       width: 100%;
-      background: var(--green);
+      background: var(--blue);
       color: var(--white);
       border: none;
       padding: 14px;
@@ -760,10 +910,10 @@
       font-size: .98rem;
       cursor: pointer;
       transition: background var(--transition);
-      box-shadow: 0 4px 14px rgba(0,200,50,.3);
+      box-shadow: 0 4px 14px rgba(38,43,237,.3);
     }
 
-    .btn-checkout:hover { background: var(--green-dark); }
+    .btn-checkout:hover { background: var(--blue-dark); }
 
     /* Toast */
     .toast {
@@ -787,7 +937,7 @@
     }
 
     .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-    .toast .dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; }
+    .toast .dot { width: 8px; height: 8px; background: var(--blue); border-radius: 50%; }
 
     /* ── FOOTER ── */
     footer {
@@ -798,7 +948,7 @@
       font-size: .82rem;
     }
 
-    footer a { color: var(--green); text-decoration: none; }
+    footer a { color: var(--blue-mid); text-decoration: none; }
 
     /* ── SPINNER ── */
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -819,6 +969,7 @@
       .login-card { padding: 28px 20px; }
       .search-bar { width: 100%; }
       .products-header { flex-direction: column; align-items: flex-start; }
+      .featured-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
     }
   </style>
 </head>
@@ -827,7 +978,7 @@
 <!-- ── NAVIGATION ── -->
 <nav>
   <div class="nav-logo" onclick="navigate('home')">
-    <img src="logo.svg" alt="Queue-it Retail" height="36" style="display:block;" />
+    <img src="assets/logo-white.png" alt="Shop-it" />
   </div>
   <div class="nav-links">
     <button id="nav-home" class="active" onclick="navigate('home')">Home</button>
@@ -842,16 +993,26 @@
 
 <!-- ── HOME PAGE ── -->
 <div class="page active" id="page-home">
+
+  <!-- Hero with product image -->
   <div class="hero">
-    <div class="hero-eyebrow">Queue-it Protected Experience</div>
-    <h1>Fair Access.<br>Every Drop.</h1>
-    <p>The Queue-it Retail demo showcases seamless virtual waiting room integration — Simple and Hybrid — so every customer gets a fair shot.</p>
-    <div class="hero-ctas">
-      <button class="btn-primary" onclick="navigate('products')">Browse Products</button>
-      <button class="btn-secondary" onclick="navigate('login')">Sign In</button>
+    <div class="hero-inner">
+      <div class="hero-text">
+        <div class="hero-eyebrow">Queue-it Protected Experience</div>
+        <h1>Fair Access.<br>Every Drop.</h1>
+        <p>The Shop-it demo showcases seamless virtual waiting room integration — Simple and Hybrid — so every customer gets a fair shot.</p>
+        <div class="hero-ctas">
+          <button class="btn-primary" onclick="navigate('products')">Browse Products</button>
+          <button class="btn-secondary" onclick="navigate('login')">Sign In</button>
+        </div>
+      </div>
+      <div class="hero-image-wrap">
+        <img src="assets/hero-sneaker.png" alt="Featured product" />
+      </div>
     </div>
   </div>
 
+  <!-- Feature strip -->
   <div class="features">
     <div class="feature-item">
       <div class="feature-icon">
@@ -883,10 +1044,20 @@
     </div>
   </div>
 
-  <div class="section">
+  <!-- Featured products row -->
+  <div class="featured-section">
+    <div class="section-label">New Arrivals</div>
+    <h2>Featured Products</h2>
+    <div class="featured-grid" id="featured-grid">
+      <!-- populated by JS -->
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <div class="section" style="border-top: 1px solid var(--gray-mid); padding-top: 56px;">
     <div class="section-label">How It Works</div>
     <h2>Two Ways to Integrate</h2>
-    <p>Queue-it's Retail Demo shows both integration patterns side-by-side so you can choose the right fit for your use case.</p>
+    <p>Shop-it shows both Queue-it integration patterns side-by-side so you can choose the right fit for your use case.</p>
     <div class="integration-cards">
       <div class="integration-card">
         <span class="tag">Simple</span>
@@ -910,7 +1081,7 @@
         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       </div>
       <h2>Welcome back</h2>
-      <p class="subtitle">Sign in to your Queue-it Retail account</p>
+      <p class="subtitle">Sign in to your Shop-it account</p>
 
       <div class="queueit-notice">
         <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -985,65 +1156,43 @@
 <div class="toast" id="toast"><span class="dot"></span><span id="toast-msg"></span></div>
 
 <footer>
-  &copy; 2026 Queue-it Retail Demo &mdash; Powered by <a href="https://queue-it.com" target="_blank">Queue-it</a>
+  &copy; 2026 Shop-it Demo &mdash; Powered by <a href="https://queue-it.com" target="_blank">Queue-it</a>
 </footer>
 
 <script>
   /* ── PRODUCTS DATA ── */
-  const PRODUCTS = [
-    {
-      id: 'wireless-headphones',
-      name: 'Wireless Headphones',
-      category: 'Audio',
-      price: 129,
-      desc: 'Premium over-ear wireless headphones with active noise cancellation and 30-hour battery life.',
-      img: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=600&q=80&auto=format&fit=crop'
-    },
-    {
-      id: 'smart-watch',
-      name: 'Smart Watch',
-      category: 'Wearables',
-      price: 349,
-      desc: 'Always-on display, GPS, heart rate monitoring, and 7-day battery with sleek aluminum case.',
-      img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80&auto=format&fit=crop'
-    },
-    {
-      id: 'premium-sneakers',
-      name: 'Premium Sneakers',
-      category: 'Footwear',
-      price: 89,
-      desc: 'Lightweight performance sneakers with responsive foam cushioning and breathable mesh upper.',
-      img: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600&q=80&auto=format&fit=crop'
-    },
-    {
-      id: 'organic-cotton-tee',
-      name: 'Organic Cotton Tee',
-      category: 'Apparel',
-      price: 39,
-      desc: 'Sustainably sourced 100% organic cotton. Relaxed fit, pre-washed for softness right out of the bag.',
-      img: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&q=80&auto=format&fit=crop'
-    },
-    {
-      id: 'fitness-tracker',
-      name: 'Fitness Tracker',
-      category: 'Wearables',
-      price: 199,
-      desc: 'Track steps, sleep, calories, and workouts. Water-resistant with a slim profile and 14-day battery.',
-      img: 'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?w=600&q=80&auto=format&fit=crop'
-    },
-    {
-      id: 'bluetooth-speaker',
-      name: 'Bluetooth Speaker',
-      category: 'Audio',
-      price: 79,
-      desc: '360° room-filling sound, IPX7 waterproof rating, and 12-hour playtime in a compact design.',
-      img: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=600&q=80&auto=format&fit=crop'
+  // Products are loaded from the shared productList.json — same source used by the iOS app.
+  const PRODUCT_LIST_URL  = './api/productList_test.json';   // relative = same origin, no CORS
+  // Production: 'https://retail.queue-it-demo.com/api/productList_test.json'
+  const IMAGE_BASE_URL    = 'https://retail.queue-it-demo.com/assets/products/';
+
+  // Normalise a raw JSON product into the shape the rest of the JS expects
+  function normaliseProduct(p) {
+    return {
+      id:       p.id,
+      name:     p.name,
+      category: p.category,
+      price:    p.price,
+      desc:     p.description,
+      img:      IMAGE_BASE_URL + p.image
+    };
+  }
+
+  async function fetchProducts() {
+    try {
+      const res = await fetch(PRODUCT_LIST_URL);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const raw = await res.json();
+      return raw.map(normaliseProduct);
+    } catch (err) {
+      console.error('[Shop-it] Failed to load productList.json:', err);
+      return [];
     }
-  ];
+  }
 
   /* ── STATE ── */
   let cart = [];
-  let allProducts = [...PRODUCTS];
+  let allProducts = [];   // populated after fetchProducts() resolves
 
   /* ── NAVIGATION ── */
   const ROUTES = {
@@ -1070,18 +1219,12 @@
       history.pushState({ page }, '', PATH_FOR[page]);
     }
 
-    // Announce the URL change to external frameworks (Queue-it, analytics, etc.)
-    // 1. Custom 'urlchange' event — any listener can subscribe to this
     window.dispatchEvent(new CustomEvent('urlchange', {
       bubbles: true,
       detail: { page, path: PATH_FOR[page] }
     }));
-    // 2. Synthetic popstate — frameworks that patch history.pushState or
-    //    listen on popstate (e.g. Queue-it config loader) will re-evaluate
     window.dispatchEvent(new PopStateEvent('popstate', { state: { page } }));
 
-    // 3. Trigger Queue-it user validation on every route change so the
-    //    waiting room is enforced regardless of which page the user lands on.
     validateQueueItUser();
 
     if (page === 'products') renderProducts(allProducts);
@@ -1089,18 +1232,37 @@
 
   /* Handle browser back/forward */
   window.addEventListener('popstate', e => {
-    // Guard against our own synthetic popstate events re-triggering navigation
     if (e.isTrusted === false) return;
     const page = (e.state && e.state.page) || ROUTES[location.pathname] || 'home';
     navigate(page, false);
   });
 
-  /* On initial load, read the URL path */
   function bootRoute() {
     const page = ROUTES[location.pathname] || 'home';
     navigate(page, false);
-    // Replace the initial history entry so popstate fires correctly on first back
     history.replaceState({ page }, '', PATH_FOR[page]);
+  }
+
+  /* ── FEATURED PRODUCTS (landing page) ── */
+  function renderFeatured() {
+    const grid = document.getElementById('featured-grid');
+    // Show first 4 products as featured
+    const featured = allProducts.slice(0, 4);
+    grid.innerHTML = featured.map(p => `
+      <div class="featured-card" onclick="navigate('products')">
+        <div class="featured-card-img">
+          <img src="${p.img}" alt="${p.name}" loading="lazy" />
+        </div>
+        <div class="featured-card-body">
+          <div class="featured-card-cat">${p.category}</div>
+          <div class="featured-card-name">${p.name}</div>
+          <div class="featured-card-footer">
+            <div class="featured-card-price">$${p.price}</div>
+            <button class="featured-card-btn">Shop Now</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
   }
 
   /* ── PRODUCT RENDER ── */
@@ -1141,24 +1303,19 @@
     renderProducts(filtered);
   }
 
-  /* ── ADD TO CART (AJAX simulation mirroring mobile hybrid pattern) ── */
+  /* ── ADD TO CART ── */
   async function addToCart(productId, btn) {
     const product = PRODUCTS.find(p => p.id === productId);
     if (!product) return;
 
-    // Loading state
     btn.classList.add('loading');
     btn.innerHTML = '<span class="spinner"></span> Adding…';
 
     try {
-      // Queue-it Hybrid Integration: simulate the product fetch/token validation
-      // In the mobile app this calls Queue-it's protected endpoint before allowing
-      // the add-to-cart action to proceed. We mirror that async pattern here.
       const response = await fetchProductWithQueueIt(product);
 
       if (!response.ok) throw new Error('Queue-it check failed');
 
-      // Successfully validated — add to cart
       const existing = cart.find(i => i.id === productId);
       if (existing) {
         existing.qty++;
@@ -1177,7 +1334,6 @@
 
       showToast(`${product.name} added to cart`);
 
-      // Reset button after 2.4 s
       setTimeout(() => {
         btn.classList.remove('added');
         btn.innerHTML = `
@@ -1197,22 +1353,13 @@
     }
   }
 
-  /**
-   * Queue-it Hybrid Integration — mirrors the Swift mobile implementation:
-   *   let urlString = "https://retail.queue-it-demo.com/api/addToCart?product=\(product.name...)"
-   *
-   * The request hits the Queue-it protected endpoint. If the user has not yet
-   * passed through the waiting room the response will redirect them there.
-   */
   async function fetchProductWithQueueIt(product) {
-    const encoded = encodeURIComponent(product.name);
-    const url = `https://retail.queue-it-demo.com/api/addToCart?product=${encoded}`;
+    // Mirrors iOS: product.addToCartURL = "https://retail.queue-it-demo.com/api/{id}.json"
+    const url = `https://retail.queue-it-demo.com/api/${product.id}.json`;
     return fetch(url, {
       method: 'GET',
-      credentials: 'include',   // send Queue-it cookies / session tokens
-      headers: {
-        'Accept': 'application/json'
-      }
+      credentials: 'include',
+      headers: { 'Accept': 'application/json' }
     });
   }
 
@@ -1221,15 +1368,12 @@
     const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
     const count = cart.reduce((s, i) => s + i.qty, 0);
 
-    // Badge
     const badge = document.getElementById('cart-badge');
     badge.textContent = count;
     badge.style.display = count > 0 ? 'flex' : 'none';
 
-    // Total
     document.getElementById('cart-total').textContent = `$${total.toFixed(2)}`;
 
-    // Items
     const container = document.getElementById('drawer-items');
     if (!cart.length) {
       container.innerHTML = `
@@ -1281,7 +1425,6 @@
     btn.textContent = 'Signing in…';
     btn.disabled = true;
 
-    // Simulate Queue-it Simple Integration delay (waiting room token resolution)
     await new Promise(r => setTimeout(r, 1000));
 
     btn.textContent = 'Sign In';
@@ -1301,12 +1444,9 @@
 
   /* ── QUEUE-IT VALIDATION ── */
   function validateQueueItUser() {
-    // QueueIt is loaded asynchronously via queueconfigloader.min.js.
-    // Poll until the global is available, then call validateUser().
     if (window.QueueIt && typeof window.QueueIt.validateUser === 'function') {
       window.QueueIt.validateUser();
     } else {
-      // SDK not ready yet — retry once after a short delay
       setTimeout(() => {
         if (window.QueueIt && typeof window.QueueIt.validateUser === 'function') {
           window.QueueIt.validateUser();
@@ -1316,8 +1456,13 @@
   }
 
   /* ── INIT ── */
-  renderProducts(PRODUCTS);
-  bootRoute();
+  // Fetch shared productList.json then boot — same endpoint as the iOS app
+  (async () => {
+    allProducts = await fetchProducts();
+    renderFeatured();
+    renderProducts(allProducts);
+    bootRoute();
+  })();
 </script>
 </body>
 </html>

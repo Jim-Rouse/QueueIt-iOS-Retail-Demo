@@ -37,16 +37,16 @@ class LogInViewController: UIViewController {
     private func setupUI() {
         view.backgroundColor = .systemBackground
         
-        // Status label (replaces activatingLabel and welcomeLabel – shown in center)
+        // Status label
         statusLabel = UILabel()
         statusLabel.font = UIFont.boldSystemFont(ofSize: 20)
         statusLabel.textAlignment = .center
-        statusLabel.textColor = UIColor(hex: "00C853") // Queue-it green
+        statusLabel.textColor = UIColor(hex: "262BED") // Electric Blue
         statusLabel.numberOfLines = 0
         statusLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(statusLabel)
         
-        // Username field (hidden until active session)
+        // Username field
         usernameField = UITextField()
         usernameField.placeholder = "User Name"
         usernameField.borderStyle = .roundedRect
@@ -56,7 +56,7 @@ class LogInViewController: UIViewController {
         usernameField.isHidden = true
         view.addSubview(usernameField)
         
-        // Password field (hidden until active session)
+        // Password field
         passwordField = UITextField()
         passwordField.placeholder = "Password"
         passwordField.borderStyle = .roundedRect
@@ -65,11 +65,11 @@ class LogInViewController: UIViewController {
         passwordField.isHidden = true
         view.addSubview(passwordField)
         
-        // Log In button (hidden until active session, styled with Queue-it green)
+        // Log In button
         logInButton = UIButton(type: .system)
         logInButton.setTitle("Log In", for: .normal)
         logInButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 18)
-        logInButton.backgroundColor = UIColor(hex: "00C853")
+        logInButton.backgroundColor = UIColor(hex: "262BED") // Electric Blue
         logInButton.setTitleColor(.white, for: .normal)
         logInButton.layer.cornerRadius = 8
         logInButton.translatesAutoresizingMaskIntoConstraints = false
@@ -79,7 +79,7 @@ class LogInViewController: UIViewController {
         
         NSLayoutConstraint.activate([
             statusLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            statusLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -100),  // Shift up for fields/button
+            statusLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -100),
             
             usernameField.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             usernameField.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 40),
@@ -95,10 +95,10 @@ class LogInViewController: UIViewController {
             logInButton.heightAnchor.constraint(equalToConstant: 50)
         ])
         
-        // Optional: Add a person icon above for retail/login feel (as in original LoginView.swift)
+        // Person icon
         let iconImage = UIImage(systemName: "person.crop.circle.badge.checkmark")
         let iconView = UIImageView(image: iconImage)
-        iconView.tintColor = UIColor(hex: "00C853")
+        iconView.tintColor = UIColor(hex: "262BED") // Electric Blue
         iconView.contentMode = .scaleAspectFit
         iconView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(iconView)
@@ -161,8 +161,6 @@ class LogInViewController: UIViewController {
     }
     
     @objc private func handleLogInTap() {
-        // For demo purposes: Show a simple alert or print credentials
-        // In a real app, this would trigger auth with backend using queue token
         guard let username = usernameField.text, !username.isEmpty,
               let password = passwordField.text, !password.isEmpty else {
             showAlert(title: "Error", message: "Please enter username and password.")
@@ -196,7 +194,7 @@ class LogInViewController: UIViewController {
     }
 }
 
-// MARK: - UIColor Hex Extension (already in your project, but included for completeness)
+// MARK: - UIColor Hex Extension
 extension UIColor {
     convenience init(hex: String) {
         let hexSanitized = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)

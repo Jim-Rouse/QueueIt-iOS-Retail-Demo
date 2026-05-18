@@ -1,131 +1,193 @@
-//
-//  ProductListView.swift
-//  QueueItRetailDemo
-//
-//  Created by James Rouse on 2/26/26.
-//
-
+// ProductListView.swift
 import SwiftUI
-
-struct Product: Codable {
-    let name: String
-    let price: String
-    let icon: String
-    let product_id: String
-}
 
 struct ProductListView: View {
     @ObservedObject var queueManager: QueueManager
     @State private var products: [Product] = []
+    @State private var isLoading = false
+    @State private var loadError: String? = nil
     @State private var cartItems: [Product] = []
-    @State private var loadingProducts: Set<String> = []
     @State private var addedProducts: Set<String> = []
-    
-    var cartCount: Int {
-        cartItems.count
-    }
-    
-    var body: some View {
-        List {
-            ForEach(products, id: \.name) { product in
-                HStack {
-                    Image(systemName: product.icon)
-                        .font(.largeTitle)
-                        .frame(width: 60)
-                    
-                    VStack(alignment: .leading) {
-                        Text(product.name)
-                            .font(.headline)
-                        Text(product.price)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    Spacer()
-                    
-                    let isLoading = loadingProducts.contains(product.name)
-                    let isAdded   = addedProducts.contains(product.name)
+    @State private var showCart = false
 
-                    Button {
-                        addToCart(product: product)
-                    } label: {
-                        Group {
-                            if isLoading {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            } else if isAdded {
-                                Label("Added", systemImage: "checkmark")
-                            } else {
-                                Text("Add To Cart")
-                            }
-                        }
-                        .frame(width: 100)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(isAdded ? .gray : Color(hex: "00C853"))
-                    .disabled(isLoading || isAdded)
+    private let productListURL = "https://retail.queue-it-demo.com/api/productList_test.json"
+
+    var cartCount: Int { cartItems.count }
+
+    var body: some View {
+        ScrollView {
+            if isLoading {
+                VStack(spacing: 12) {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "262BED")))
+                        .scaleEffect(1.5)
+                    Text("Loading products...")
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
                 }
-                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 80)
+
+            } else if let error = loadError {
+                VStack(spacing: 16) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.system(size: 40))
+                        .foregroundColor(.secondary)
+                    Text(error)
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                    Button("Retry") {
+                        Task { await fetchProducts() }
+                    }
+                    .foregroundColor(Color(hex: "262BED"))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.top, 80)
+                .padding(.horizontal, 32)
+
+            } else {
+                LazyVGrid(
+                    columns: [GridItem(.flexible()), GridItem(.flexible())],
+                    spacing: 16
+                ) {
+                    ForEach(products) { product in
+                        ProductCardView(product: product) {
+                            addToCart(product)
+                        }
+                    }
+                }
+                .padding(16)
             }
         }
-        .navigationTitle("Shop")
+        .background(Color(.systemGroupedBackground))
+        .navigationTitle("")
+        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                ZStack {
-                    Image(systemName: "cart")
-                        .font(.title2)
-                        .foregroundColor(.primary)
-                    
-                    if cartCount > 0 {
-                        Text("\(cartCount)")
-                            .font(.caption2)
-                            .fontWeight(.bold)
+            // ── Center: logo ──
+            ToolbarItem(placement: .principal) {
+                Image("logo-white")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 28)
+            }
+
+            // ── Right: cart button ──
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    showCart = true
+                } label: {
+                    ZStack(alignment: .topTrailing) {
+                        Image(systemName: "cart")
+                            .font(.system(size: 20, weight: .semibold))
                             .foregroundColor(.white)
-                            .frame(width: 16, height: 16)
-                            .background(Color.red)
+                            .padding(8)
+                            .background(Color.white.opacity(0.2))
                             .clipShape(Circle())
-                            .offset(x: 10, y: -10)
+
+                        if cartCount > 0 {
+                            Text("\(cartCount)")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundColor(.white)
+                                .padding(4)
+                                .background(Color.red)
+                                .clipShape(Circle())
+                                .offset(x: 6, y: -6)
+                        }
                     }
                 }
             }
+        }
+        .sheet(isPresented: $showCart) {
+            CartView(cartItems: cartItems)
         }
         .onAppear {
-            Task {
-                await fetchProducts()
+            if products.isEmpty {
+                Task { await fetchProducts() }
             }
         }
     }
-    
+
+    // MARK: - Fetch
+
     private func fetchProducts() async {
-        guard let url = URL(string: "https://retail.queue-it-demo.com/api/productList.json") else {
-            print("Invalid URL")
-            return
-        }
-        
+        isLoading = true
+        loadError = nil
+        print("[ProductList] 🚀 Fetching productList.json")
+
         do {
-            let data = try await queueManager.makeProtectedRequest(to: url.absoluteString)
-            products = try JSONDecoder().decode([Product].self, from: data)
+            let data = try await queueManager.makeProtectedRequest(to: productListURL)
+            print("[ProductList] ✅ Got \(data.count) bytes")
+            let decoded = try JSONDecoder().decode([Product].self, from: data)
+            print("[ProductList] ✅ Decoded \(decoded.count) products")
+            await MainActor.run { products = decoded }
         } catch {
-            print("Error fetching products: \(error.localizedDescription)")
-            // For production, you might want to show an alert or retry button
+            print("[ProductList] ❌ \(error.localizedDescription)")
+            await MainActor.run { loadError = "Could not load products.\n\(error.localizedDescription)" }
+        }
+
+        await MainActor.run { isLoading = false }
+    }
+
+    // MARK: - Cart
+
+    private func addToCart(_ product: Product) {
+        let urlString = product.addToCartURL
+        print("[ProductList] 🛒 Add to cart: \(urlString)")
+
+        Task {
+            do {
+                _ = try await queueManager.makeProtectedRequest(to: urlString)
+                await MainActor.run {
+                    cartItems.append(product)
+                    addedProducts.insert(product.id)
+                }
+            } catch {
+                print("[ProductList] ❌ Add to cart failed: \(error.localizedDescription)")
+            }
         }
     }
-    
-    private func addToCart(product: Product) {
-        let urlString = "https://retail.queue-it-demo.com/api/addToCart?product=\(product.name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "")"  
-        loadingProducts.insert(product.name)
-        queueManager.makeProtectedRequest(to: urlString) { result in
-            DispatchQueue.main.async {
-                self.loadingProducts.remove(product.name)
-                switch result {
-                case .success:
-                    self.cartItems.append(product)
-                    self.addedProducts.insert(product.name)
-                    print("Added \(product.name) to cart")
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                        self.addedProducts.remove(product.name)
-                    }
-                case .failure(let error):
-                    print("Error adding to cart: \(error.localizedDescription)")
+}
+
+// MARK: - Nav Bar Appearance
+extension ProductListView {
+    static func configureNavBarAppearance() {
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = UIColor(Color(hex: "262BED"))
+        appearance.shadowColor = .clear
+        UINavigationBar.appearance().standardAppearance = appearance
+        UINavigationBar.appearance().scrollEdgeAppearance = appearance
+        UINavigationBar.appearance().compactAppearance = appearance
+    }
+}
+
+// MARK: - Cart Sheet
+struct CartView: View {
+    let cartItems: [Product]
+    @Environment(\.dismiss) var dismiss
+
+    var total: Double { cartItems.reduce(0) { $0 + $1.price } }
+
+    var body: some View {
+        NavigationView {
+            List(cartItems) { item in
+                HStack {
+                    Text(item.name)
+                    Spacer()
+                    Text("$\(Int(item.price))")
+                        .bold()
+                }
+            }
+            .navigationTitle("Cart (\(cartItems.count))")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") { dismiss() }
+                }
+                ToolbarItem(placement: .bottomBar) {
+                    Text("Total: $\(Int(total))")
+                        .bold()
                 }
             }
         }

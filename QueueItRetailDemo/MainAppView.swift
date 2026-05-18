@@ -5,8 +5,6 @@
 //  Created by James Rouse on 2/26/26.
 //
 
-
-
 import SwiftUI
 import QueueItKit
 
@@ -22,14 +20,15 @@ struct MainAppView: View {
     @StateObject private var queueManager = QueueManager()
     @State private var currentScreen: AppScreen = .home
     @State private var showMenu = false
-    
+    @State private var cartItems: [Product] = []
+
     var body: some View {
         NavigationStack {
             ZStack {
                 // Main content
                 Group {
                     switch currentScreen {
-                    case .home:        HomeView()
+                    case .home:        HomeView(currentScreen: $currentScreen)
                     case .login:       LogInRepresentable(queueManager: queueManager, currentScreen: $currentScreen)
                     case .productList: ProductListView(queueManager: queueManager)
                     case .settings:    SettingsView()
@@ -37,42 +36,58 @@ struct MainAppView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                
-                // Custom bottom bar (only 2 buttons as requested)
+
+                // Custom bottom bar
                 VStack {
                     Spacer()
-                    
+
                     if queueManager.sessionActive {
                         Text(String(format: "%02d:%02d", queueManager.remainingTime / 60, queueManager.remainingTime % 60))
                             .font(.title2.bold())
-                            .foregroundColor(Color(hex: "00C853"))
+                            .foregroundColor(Color(hex: "262BED"))
                             .padding(.bottom, 8)
                     }
-                    
+
                     CustomBottomBar(currentScreen: $currentScreen)
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                // ── Leading: hamburger only on non-product screens ──
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(action: { showMenu = true }) {
-                        Image(systemName: "line.3.horizontal")
-                            .font(.title2)
+                    if currentScreen != .productList {
+                        Button(action: { showMenu = true }) {
+                            Image(systemName: "line.3.horizontal")
+                                .font(.title2)
+                                .foregroundColor(.white)
+                        }
+                    }
+                }
+
+                // ── Center: logo on product list, "Shop-it" text everywhere else ──
+                ToolbarItem(placement: .principal) {
+                    if currentScreen == .productList {
+                        Image("logo-white")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 28)
+                    } else {
+                        Text("Shop-it")
+                            .font(.headline)
                             .foregroundColor(.white)
                     }
                 }
-                ToolbarItem(placement: .principal) {
-                    Text("Queue-it Retail")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                }
             }
-            .toolbarBackground(Color(hex: "00C853"), for: .navigationBar)
+            .toolbarBackground(Color(hex: "262BED"), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
         }
         .fullScreenCover(isPresented: $queueManager.showWebView) {
             if let manager = queueManager.viewManager {
-                QueueWebViewContainer(viewManager: manager, progressBackgroundColor: .red, progressColor: .blue)
+                QueueWebViewContainer(
+                    viewManager: manager,
+                    progressBackgroundColor: Color(hex: "262BED"),
+                    progressColor: .white
+                )
             }
         }
         .alert("Queue-it Error", isPresented: $queueManager.showError) {
@@ -84,7 +99,7 @@ struct MainAppView: View {
             MenuView(currentScreen: $currentScreen)
         }
         .environmentObject(queueManager)
-        .onChange(of: queueManager.navigateToHome) { newValue in
+        .onChange(of: queueManager.navigateToHome) { oldValue, newValue in
             if newValue {
                 currentScreen = .home
                 queueManager.navigateToHome = false
@@ -93,14 +108,13 @@ struct MainAppView: View {
         .alert("Session Expired", isPresented: $queueManager.showSessionExpired) {} message: {
             Text("Your session has timed out.")
         }
-        
     }
 }
 
-// MARK: - Custom Bottom Bar (Home, Log-in, Product List)
+// MARK: - Custom Bottom Bar
 struct CustomBottomBar: View {
     @Binding var currentScreen: AppScreen
-    
+
     var body: some View {
         HStack(spacing: 0) {
             BottomButton(title: "Home",         icon: "house",              screen: .home,        current: $currentScreen)
@@ -116,7 +130,7 @@ struct BottomButton: View {
     let icon: String
     let screen: AppScreen
     @Binding var current: AppScreen
-    
+
     var body: some View {
         Button {
             current = screen
@@ -128,19 +142,19 @@ struct BottomButton: View {
                     .font(.caption)
             }
             .frame(maxWidth: .infinity)
-            .foregroundColor(current == screen ? Color(hex: "00C853") : .gray)
+            .foregroundColor(current == screen ? Color(hex: "262BED") : .gray)
         }
     }
 }
 
 struct LogInRepresentable: UIViewControllerRepresentable {
-    @ObservedObject var queueManager: QueueManager   // ← Add this
+    @ObservedObject var queueManager: QueueManager
     @Binding var currentScreen: AppScreen
 
     func makeUIViewController(context: Context) -> LogInViewController {
         let vc = LogInViewController()
-        vc.queueManager = queueManager               // ← Pass the shared manager
-        vc.goHomeClosure = { currentScreen = .home } // ← Auto-return on expiry
+        vc.queueManager = queueManager
+        vc.goHomeClosure = { currentScreen = .home }
         return vc
     }
 

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "wireless-headphones",
+    "name": "Wireless Headphones",
+    "category": "Audio",
+    "description": "Premium over-ear wireless headphones with active noise cancellation and 30-hour battery life.",
+    "price": 129,
+    "image": "headphones.jpg"
+  },
+  {
+    "id": "smart-watch",
+    "name": "Smart Watch",
+    "category": "Wearables",
+    "description": "Always-on display, GPS, heart rate monitoring, and 7-day battery with sleek aluminum case.",
+    "price": 349,
+    "image": "smart-watch.avif"
+  },
+  {
+    "id": "premium-sneakers",
+    "name": "Premium Sneakers",
+    "category": "Footwear",
+    "description": "Lightweight performance sneakers with responsive foam cushioning and breathable mesh upper.",
+    "price": 89,
+    "image": "sneakers.jpg"
+  },
+  {
+    "id": "organic-cotton-tee",
+    "name": "Organic Cotton Tee",
+    "category": "Apparel",
+    "description": "Sustainably sourced 100% organic cotton. Relaxed fit, pre-washed for softness right out of the bag.",
+    "price": 39,
+    "image": "tee.jpg"
+  },
+  {
+    "id": "superior-electrolytes",
+    "name": "Superior Electrolytes",
+    "category": "Nutrition",
+    "description": "Stay energised and hydrated with clean, effective electrolytes.",
+    "price": 29,
+    "image": "electrolytes.jpg"
+  },
+  {
+    "id": "bluetooth-speaker",
+    "name": "Bluetooth Speaker",
+    "category": "Audio",
+    "description": "360° room-filling sound, IPX7 waterproof rating, and 12-hour playtime in a compact design.",
+    "price": 79,
+    "image": "speaker.jpg"
+  }
+]
