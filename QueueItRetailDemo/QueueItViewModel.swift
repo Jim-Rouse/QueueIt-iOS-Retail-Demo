@@ -94,14 +94,6 @@ public final class QueueItViewModel: ObservableObject {
         }
     }
 
-    public func loadProduct(id: String) async throws -> ProductDetail {
-        let url = QueueItConfig.apiBaseURL
-            .appendingPathComponent("products")
-            .appendingPathComponent(id)
-        let data = try await hybridManager.call(URLRequest(url: url))
-        return try JSONDecoder().decode(ProductDetail.self, from: data)
-    }
-
     private func bindHybridState() {
         hybridManager.$queueState
             .receive(on: RunLoop.main)
@@ -155,27 +147,4 @@ private final class SimpleQueueListener: QueueListener {
     func onWebViewClosed() {
         Task { @MainActor in viewModel?.showWebView = false }
     }
-}
-
-// MARK: - Models
-
-public struct Product: Identifiable, Decodable {
-    public let id: String
-    public let name: String
-    public let category: String
-    public let price: Double
-    public let imageURL: URL?
-
-    private enum CodingKeys: String, CodingKey {
-        case id, name, category, price
-        case imageURL = "image_url"
-    }
-}
-
-public struct ProductDetail: Decodable {
-    public let id: String
-    public let name: String
-    public let description: String
-    public let price: Double
-    public let stock: Int
 }

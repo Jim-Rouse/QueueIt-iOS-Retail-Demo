@@ -1,6 +1,4 @@
 // QueueItView.swift
-// SwiftUI view layer for the Shop-it demo — both Simple and Hybrid patterns.
-
 import SwiftUI
 import QueueItKit
 
@@ -17,8 +15,6 @@ public struct ShopItRootView: View {
                 LoginView(viewModel: viewModel)
             }
         }
-        // ── Queue WebView overlay ──────────────────────────────────────────
-        // Handles BOTH the simple (login) and hybrid (product) waiting rooms.
         .fullScreenCover(isPresented: $viewModel.showWebView) {
             queueWebViewContent
         }
@@ -60,7 +56,6 @@ struct LoginView: View {
                 .ignoresSafeArea()
 
                 VStack(spacing: 32) {
-                    // Logo
                     VStack(spacing: 8) {
                         Image(systemName: "cart.fill")
                             .font(.system(size: 52))
@@ -74,10 +69,8 @@ struct LoginView: View {
                     }
                     .padding(.top, 60)
 
-                    // Queue-it badge
                     HStack(spacing: 6) {
-                        Image(systemName: "lock.shield.fill")
-                            .foregroundStyle(.green)
+                        Image(systemName: "lock.shield.fill").foregroundStyle(.green)
                         Text("Protected by Queue-it (Simple Integration)")
                             .font(.caption)
                             .foregroundStyle(.white.opacity(0.8))
@@ -87,14 +80,12 @@ struct LoginView: View {
                     .background(.white.opacity(0.1))
                     .clipShape(Capsule())
 
-                    // Form
                     VStack(spacing: 16) {
                         FloatingTextField(title: "Email", text: $email, isSecure: false)
                         FloatingTextField(title: "Password", text: $password, isSecure: true)
                     }
                     .padding(.horizontal, 24)
 
-                    // Error
                     if let error = viewModel.errorMessage {
                         Text(error)
                             .foregroundStyle(.red)
@@ -102,20 +93,16 @@ struct LoginView: View {
                             .padding(.horizontal, 24)
                     }
 
-                    // Sign-in button
                     Button {
                         viewModel.runLoginQueue()
                     } label: {
                         HStack {
-                            if viewModel.isLoading {
-                                ProgressView().tint(.white)
-                            }
-                            Text("Sign In")
-                                .font(.headline)
+                            if viewModel.isLoading { ProgressView().tint(.white) }
+                            Text("Sign In").font(.headline)
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.accentColor)
+                        .background(Color(hex: "00C853"))
                         .foregroundStyle(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
@@ -134,14 +121,12 @@ struct LoginView: View {
 
 struct ShopItProductListView: View {
     @ObservedObject var viewModel: QueueItViewModel
-
     let columns = [GridItem(.adaptive(minimum: 160), spacing: 16)]
 
     var body: some View {
         NavigationStack {
             ZStack {
                 Color(.systemGroupedBackground).ignoresSafeArea()
-
                 Group {
                     if viewModel.isLoading && viewModel.products.isEmpty {
                         ProgressView("Loading products…")
@@ -163,9 +148,7 @@ struct ShopItProductListView: View {
             }
             .navigationTitle("Products")
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    queueStateBadge
-                }
+                ToolbarItem(placement: .topBarLeading) { queueStateBadge }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Logout") { viewModel.logout() }
                 }
@@ -177,10 +160,8 @@ struct ShopItProductListView: View {
     private var productGrid: some View {
         ScrollView {
             HStack(spacing: 6) {
-                Image(systemName: "server.rack")
-                    .foregroundStyle(.blue)
-                Text("API protected by Queue-it (Hybrid Integration)")
-                    .font(.caption)
+                Image(systemName: "server.rack").foregroundStyle(.blue)
+                Text("API protected by Queue-it (Hybrid Integration)").font(.caption)
             }
             .padding(.horizontal)
             .padding(.top, 8)
@@ -188,7 +169,7 @@ struct ShopItProductListView: View {
             LazyVGrid(columns: columns, spacing: 16) {
                 ForEach(viewModel.products) { product in
                     ProductCardView(product: product) {
-                        // Add to cart action — wire up as needed
+                        // add to cart — wire up as needed
                     }
                 }
             }
@@ -199,14 +180,10 @@ struct ShopItProductListView: View {
     @ViewBuilder
     private var queueStateBadge: some View {
         switch viewModel.queueState {
-        case .queuing:
-            Label("In Queue", systemImage: "clock.fill").foregroundStyle(.orange)
-        case .checking:
-            Label("Checking", systemImage: "network").foregroundStyle(.blue)
-        case .passed:
-            Label("Passed", systemImage: "checkmark.seal.fill").foregroundStyle(.green)
-        default:
-            EmptyView()
+        case .queuing:   Label("In Queue",  systemImage: "clock.fill").foregroundStyle(.orange)
+        case .checking:  Label("Checking",  systemImage: "network").foregroundStyle(.blue)
+        case .passed:    Label("Passed",    systemImage: "checkmark.seal.fill").foregroundStyle(.green)
+        default:         EmptyView()
         }
     }
 }
@@ -233,9 +210,6 @@ struct FloatingTextField: View {
         .background(.white.opacity(0.1))
         .foregroundStyle(.white)
         .clipShape(RoundedRectangle(cornerRadius: 12))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(.white.opacity(0.2), lineWidth: 1)
-        )
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(.white.opacity(0.2), lineWidth: 1))
     }
 }
