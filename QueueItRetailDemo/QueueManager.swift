@@ -46,16 +46,13 @@ class QueueManager: ObservableObject, QueueListener {
 
     func createEngine() {
         guard !customerID.isEmpty, !waitingRoomID.isEmpty else { return }
-        
-        let webView = WKWebView()
-        webView.navigationDelegate = QueueItWebViewLogger.shared
+
         engine = QueueItEngine(
             customerId: customerID,
             waitingRoomOrAliasId: waitingRoomID,
             queueListener: self,
             themeName: layoutName.isEmpty ? nil : layoutName,
             language: language,
-            webView: webView,
             waitingRoomDomain: waitingRoomDomain.isEmpty ? nil : waitingRoomDomain,
             queuePathPrefix: waitingRoomPrefix.isEmpty ? nil : waitingRoomPrefix
         )
@@ -185,16 +182,12 @@ class QueueManager: ObservableObject, QueueListener {
                         self?.makeProtectedRequest(to: urlString, completion: completion)
                     }
 
-                    let webView = WKWebView()
-                    webView.navigationDelegate = QueueItWebViewLogger.shared
-                    
                     let engine = QueueItEngine(
                         customerId: customerId,
                         waitingRoomOrAliasId: waitingRoomOrAliasId,
                         queueListener: self,
                         themeName: layoutName,
                         language: language ?? "en",
-                        webView: webView,
                         waitingRoomDomain: self.waitingRoomDomain.isEmpty ? nil : self.waitingRoomDomain,
                         queuePathPrefix: self.waitingRoomPrefix.isEmpty ? nil : self.waitingRoomPrefix
                     )
