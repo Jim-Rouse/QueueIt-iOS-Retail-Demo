@@ -31,7 +31,7 @@ struct MainAppView: View {
                     switch currentScreen {
                     case .home:        HomeView(currentScreen: $currentScreen)
                     case .login:       LogInRepresentable(queueManager: queueManager, currentScreen: $currentScreen)
-                    case .productList: ProductListView(queueManager: queueManager)
+                    case .productList: ProductListView()
                     case .settings:    SettingsView()
                     case .userState:   UserStateView()
                     }
@@ -69,6 +69,7 @@ struct MainAppView: View {
             }
             .toolbarBackground(Color(hex: "262BED"), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
+            .environmentObject(queueManager)
         }
         .fullScreenCover(isPresented: $queueManager.showWebView) {
             if let manager = queueManager.viewManager {

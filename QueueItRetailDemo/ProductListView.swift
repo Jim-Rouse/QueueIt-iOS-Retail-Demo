@@ -1,8 +1,12 @@
-// ProductListView.swift
+//
+//  ProductListView.swift
+//  QueueItRetailDemo
+//
+
 import SwiftUI
 
 struct ProductListView: View {
-    @ObservedObject var queueManager: QueueManager
+    @EnvironmentObject var queueManager: QueueManager
     @State private var cartItems: [Product] = []
     @State private var addedProducts: Set<String> = []
     @State private var showCart = false
@@ -53,8 +57,22 @@ struct ProductListView: View {
     }
 
     private func addToCart(_ product: Product) {
-        cartItems.append(product)
-        addedProducts.insert(product.id)
+        // TODO: Replace with your real API endpoint
+        let apiUrl = "https://your-api-endpoint.com/cart/add"   // ← Change this
+        
+        queueManager.makeProtectedRequest(to: apiUrl) { result in
+            switch result {
+            case .success(let data):
+                print("✅ Add to cart success for \(product.name)")
+                // Add to local cart
+                cartItems.append(product)
+                addedProducts.insert(product.id)
+                
+            case .failure(let error):
+                print("❌ Add to cart failed: \(error.localizedDescription)")
+                // You can show an alert here if needed
+            }
+        }
     }
 }
 
