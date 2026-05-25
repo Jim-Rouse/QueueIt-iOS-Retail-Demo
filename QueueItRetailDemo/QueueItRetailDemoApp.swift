@@ -11,8 +11,10 @@ import WebKit
 @main
 struct QueueItRetailDemoApp: App {
     init() {
+        // Clear any leftover queue state from a previous session
         UserDefaults.standard.removeObject(forKey: "queueItToken")
         CookieManager.shared.clearCookies()
+
         let dataStore = WKWebsiteDataStore.default()
         dataStore.removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(),
                              modifiedSince: .distantPast) {}
@@ -24,7 +26,6 @@ struct QueueItRetailDemoApp: App {
         }
     }
 }
-
 extension Color {
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
