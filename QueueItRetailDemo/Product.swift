@@ -5,65 +5,79 @@
 //  Created by James Rouse on 4/30/26.
 //
 import Foundation
-// Product.swift
-struct Product: Identifiable {
+
+struct Product: Codable, Identifiable {
     let id: String
+    let product_id: String
     let name: String
     let category: String
     let description: String
     let price: Double
-    let imageURL: URL?
+    let image: String   // filename only, e.g. "headphones.jpg"
 
     private static let baseURL = "https://retail.queue-it-demo.com/assets/products/"
 
+    /// Computed from baseURL + image filename — not decoded from JSON
+    var imageURL: URL? {
+        URL(string: Self.baseURL + image)
+    }
+
+    // MARK: - SwiftUI Previews / Fallback
+
     static let sampleProducts: [Product] = [
         Product(
-            id: "card-wireless-headphones",
+            id: "wireless-headphones",
+            product_id: "WHP001",
             name: "Wireless Headphones",
             category: "Audio",
-            description: "Premium sound with active noise cancellation and 30-hour battery life.",
+            description: "Premium over-ear wireless headphones with active noise cancellation and 30-hour battery life.",
             price: 129,
-            imageURL: URL(string: baseURL + "headphones.jpg")
+            image: "headphones.jpg"
         ),
         Product(
-            id: "card-smart-watch",
+            id: "smart-watch",
+            product_id: "SW234",
             name: "Smart Watch",
             category: "Wearables",
             description: "Always-on display, GPS, heart rate monitoring, and 7-day battery with sleek aluminum case.",
             price: 349,
-            imageURL: URL(string: baseURL + "smart-watch.avif")
+            image: "smart-watch.avif"
         ),
         Product(
-            id: "card-premium-sneakers",
+            id: "premium-sneakers",
+            product_id: "PS987",
             name: "Premium Sneakers",
             category: "Footwear",
-            description: "Lightweight design with responsive cushioning for all-day comfort.",
+            description: "Lightweight performance sneakers with responsive foam cushioning and breathable mesh upper.",
             price: 89,
-            imageURL: URL(string: baseURL + "sneakers.jpg")
+            image: "sneakers.jpg"
         ),
         Product(
-            id: "card-organic-cotton-tee",
+            id: "organic-cotton-tee",
+            product_id: "OCT987",
             name: "Organic Cotton Tee",
             category: "Apparel",
-            description: "Sustainably sourced, ultra-soft organic cotton. Available in 12 colors.",
+            description: "Sustainably sourced 100% organic cotton. Relaxed fit, pre-washed for softness right out of the bag.",
             price: 39,
-            imageURL: URL(string: baseURL + "tee.jpg")
+            image: "tee.jpg"
         ),
         Product(
-            id: "card-superior-electrolytes",
+            id: "superior-electrolytes",
+            product_id: "SE_NotAvailable",
             name: "Superior Electrolytes",
             category: "Nutrition",
-            description: "Advanced hydration formula with essential minerals for peak performance.",
+            description: "Stay energised and hydrated with clean, effective electrolytes.",
             price: 29,
-            imageURL: URL(string: baseURL + "electrolytes.jpg")
+            image: "electrolytes.jpg"
         ),
         Product(
-            id: "card-bluetooth-speaker",
+            id: "bluetooth-speaker",
+            product_id: "BLS_NotAvailable",
             name: "Bluetooth Speaker",
             category: "Audio",
-            description: "360° immersive sound with 24-hour battery and waterproof design.",
+            description: "360° room-filling sound, IPX7 waterproof rating, and 12-hour playtime in a compact design.",
             price: 79,
-            imageURL: URL(string: baseURL + "speaker.jpg")
+            image: "speaker.jpg"
         )
     ]
 }

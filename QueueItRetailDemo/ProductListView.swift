@@ -58,7 +58,7 @@ struct ProductListView: View {
 
     private func addToCart(_ product: Product) {
         // TODO: Replace with your real API endpoint
-        let apiUrl = "https://your-api-endpoint.com/cart/add"   // ← Change this
+        let apiUrl = "https://retail.queue-it-demo.com/api/\(product.product_id).json"   // ← Change this
         
         queueManager.makeProtectedRequest(to: apiUrl) { result in
             switch result {

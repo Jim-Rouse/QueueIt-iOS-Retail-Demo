@@ -101,7 +101,7 @@ class QueueManager: ObservableObject, QueueListener {
 
         // Queue-it headers
         request.addValue(url.absoluteString, forHTTPHeaderField: "x-queueit-ajaxpageurl")
-        logger.info("📤 Added x-queueit-ajaxpageurl")
+        logger.info("📤 Added request header x-queueit-ajaxpageurl: \(url.absoluteString)")
 
         if let cookieHeader = CookieManager.shared.cookieHeaderValue() {
             request.addValue(cookieHeader, forHTTPHeaderField: "Cookie")
@@ -132,7 +132,7 @@ class QueueManager: ObservableObject, QueueListener {
             logger.info("📥 [RESPONSE] Status: \(httpResponse.statusCode)")
 
             // Log all x-queue* response headers
-            logger.info("🔍 x-queue* Response Headers:")
+            logger.info("🔍 Show any x-queue* Response Headers:")
             var found = false
             for (key, value) in httpResponse.allHeaderFields {
                 if let k = key as? String, k.lowercased().hasPrefix("x-queue") {

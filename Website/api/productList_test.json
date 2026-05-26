@@ -1,6 +1,7 @@
 [
   {
     "id": "wireless-headphones",
+    "product_id": "WHP001",
     "name": "Wireless Headphones",
     "category": "Audio",
     "description": "Premium over-ear wireless headphones with active noise cancellation and 30-hour battery life.",
@@ -9,6 +10,7 @@
   },
   {
     "id": "smart-watch",
+    "product_id": "SW234",
     "name": "Smart Watch",
     "category": "Wearables",
     "description": "Always-on display, GPS, heart rate monitoring, and 7-day battery with sleek aluminum case.",
@@ -17,6 +19,7 @@
   },
   {
     "id": "premium-sneakers",
+    "product_id": "PS987",
     "name": "Premium Sneakers",
     "category": "Footwear",
     "description": "Lightweight performance sneakers with responsive foam cushioning and breathable mesh upper.",
@@ -25,6 +28,7 @@
   },
   {
     "id": "organic-cotton-tee",
+    "product_id": "OCT987",
     "name": "Organic Cotton Tee",
     "category": "Apparel",
     "description": "Sustainably sourced 100% organic cotton. Relaxed fit, pre-washed for softness right out of the bag.",
@@ -33,6 +37,7 @@
   },
   {
     "id": "superior-electrolytes",
+    "product_id": "SE_NotAvailable",
     "name": "Superior Electrolytes",
     "category": "Nutrition",
     "description": "Stay energised and hydrated with clean, effective electrolytes.",
@@ -41,6 +46,7 @@
   },
   {
     "id": "bluetooth-speaker",
+    "product_id": "BLS_NotAvailable",
     "name": "Bluetooth Speaker",
     "category": "Audio",
     "description": "360° room-filling sound, IPX7 waterproof rating, and 12-hour playtime in a compact design.",
