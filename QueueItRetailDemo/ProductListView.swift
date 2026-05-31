@@ -7,11 +7,12 @@ import SwiftUI
 
 struct ProductListView: View {
     @EnvironmentObject var queueManager: QueueManager
+    @State private var products: [Product] = []
     @State private var cartItems: [Product] = []
     @State private var addedProducts: Set<String> = []
     @State private var showCart = false
-
-    let products = Product.sampleProducts
+    @State private var isLoading = false
+    @State private var errorMessage: String?
 
     var cartCount: Int { cartItems.count }
 
@@ -53,24 +54,50 @@ struct ProductListView: View {
             .sheet(isPresented: $showCart) {
                 CartView(cartItems: cartItems)
             }
+            .onAppear {
+                fetchProducts()
+            }
         }
     }
 
+    private func fetchProducts() {
+        isLoading = true
+        errorMessage = nil
+
+        queueManager.makeProtectedRequest(to: "https://retail.queue-it-demo.com/api/productList_test.json") { result in
+            DispatchQueue.main.async {
+                isLoading = false
+                switch result {
+                case .success(let data):
+                    do {
+                        products = try JSONDecoder().decode([Product].self, from: data)
+                    } catch {
+                        errorMessage = error.localizedDescription
+                        print("❌ Failed to decode products: \(error)")
+                    }
+                case .failure(let error):
+                    errorMessage = error.localizedDescription
+                    print("❌ fetchProducts failed: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    // MARK: - Add to Cart
+
     private func addToCart(_ product: Product) {
-        // TODO: Replace with your real API endpoint
-        let apiUrl = "https://retail.queue-it-demo.com/api/\(product.product_id).json"   // ← Change this
-        
+        let apiUrl = "https://retail.queue-it-demo.com/api/\(product.product_id).json?"
+
         queueManager.makeProtectedRequest(to: apiUrl) { result in
             switch result {
-            case .success(let data):
+            case .success:
                 print("✅ Add to cart success for \(product.name)")
-                // Add to local cart
-                cartItems.append(product)
-                addedProducts.insert(product.id)
-                
+                DispatchQueue.main.async {
+                    cartItems.append(product)
+                    addedProducts.insert(product.id)
+                }
             case .failure(let error):
                 print("❌ Add to cart failed: \(error.localizedDescription)")
-                // You can show an alert here if needed
             }
         }
     }
@@ -107,3 +134,5 @@ struct CartView: View {
         }
     }
 }
+
+

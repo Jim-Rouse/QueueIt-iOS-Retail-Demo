@@ -31,7 +31,7 @@ struct MainAppView: View {
                     switch currentScreen {
                     case .home:        HomeView(currentScreen: $currentScreen)
                     case .login:       LogInRepresentable(queueManager: queueManager, currentScreen: $currentScreen)
-                    case .productList: ProductListView()
+                    case .productList: ProductListView().environmentObject(queueManager)
                     case .settings:    SettingsView()
                     case .userState:   UserStateView()
                     }
@@ -69,7 +69,6 @@ struct MainAppView: View {
             }
             .toolbarBackground(Color(hex: "262BED"), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
-            .environmentObject(queueManager)
         }
         .fullScreenCover(isPresented: $queueManager.showWebView) {
             if let manager = queueManager.viewManager {
@@ -135,7 +134,7 @@ struct BottomButton: View {
 }
 
 struct LogInRepresentable: UIViewControllerRepresentable {
-    @ObservedObject var queueManager: QueueManager   // ← Add this
+    @ObservedObject var queueManager: QueueManager
     @Binding var currentScreen: AppScreen
 
     func makeUIViewController(context: Context) -> LogInViewController {
@@ -147,3 +146,4 @@ struct LogInRepresentable: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: LogInViewController, context: Context) {}
 }
+

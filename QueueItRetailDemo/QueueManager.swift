@@ -114,6 +114,9 @@ class QueueManager: ObservableObject, QueueListener {
             UserDefaults.standard.removeObject(forKey: "queueItToken")
         }
 
+        logger.info("📤 Final request headers being sent: \(request.allHTTPHeaderFields ?? [:])")
+        logger.info("📤 Request URL: \(request.url?.absoluteString ?? "nil")  Method: \(request.httpMethod ?? "nil")")
+
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             guard let self = self else { return }
 
@@ -130,19 +133,23 @@ class QueueManager: ObservableObject, QueueListener {
             }
 
             logger.info("📥 [RESPONSE] Status: \(httpResponse.statusCode)")
+            // Log ALL response headers
+            logger.info("🔍 All Response Headers:")
 
-            // Log all x-queue* response headers
-            logger.info("🔍 Show any x-queue* Response Headers:")
-            var found = false
-            for (key, value) in httpResponse.allHeaderFields {
-                if let k = key as? String, k.lowercased().hasPrefix("x-queue") {
-                    let safeValue = String(describing: value)
-                    logger.info("   🔑 \(k): \(safeValue)")
-                    found = true
+            if httpResponse.allHeaderFields.isEmpty {
+                logger.info(" (No headers found)")
+            } else {
+                // Sort them alphabetically so it's easier to read
+                let sortedHeaders = httpResponse.allHeaderFields.sorted {
+                    String(describing: $0.key).lowercased() < String(describing: $1.key).lowercased()
                 }
-            }
-            if !found {
-                logger.info("   (No x-queue* headers found)")
+                
+                for (key, value) in sortedHeaders {
+                    if let k = key as? String {
+                        let safeValue = String(describing: value)
+                        logger.info(" 🔑 \(k): \(safeValue)")
+                    }
+                }
             }
 
             // Process cookies
