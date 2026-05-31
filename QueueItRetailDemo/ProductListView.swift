@@ -14,6 +14,8 @@ struct ProductListView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
 
+    private let fetchDataService = FetchDataService(sharedPreferences: SharedPreferencesService())
+
     var cartCount: Int { cartItems.count }
 
     var body: some View {
@@ -64,20 +66,28 @@ struct ProductListView: View {
         isLoading = true
         errorMessage = nil
 
-        queueManager.makeProtectedRequest(to: "https://retail.queue-it-demo.com/api/productList_test.json") { result in
-            DispatchQueue.main.async {
+        Task {
+            let response = await fetchDataService.fetchDataRequest("https://retail.queue-it-demo.com/api/productList_test.json")
+
+            await MainActor.run {
                 isLoading = false
-                switch result {
-                case .success(let data):
-                    do {
-                        products = try JSONDecoder().decode([Product].self, from: data)
-                    } catch {
-                        errorMessage = error.localizedDescription
-                        print("❌ Failed to decode products: \(error)")
-                    }
-                case .failure(let error):
+
+                if response.connectorResponse != nil {
+                    queueManager.activateWaitingRoom()
+                    return
+                }
+
+                guard let body = response.originServerResponse,
+                      let data = body.data(using: .utf8) else {
+                    errorMessage = "Empty response"
+                    return
+                }
+
+                do {
+                    products = try JSONDecoder().decode([Product].self, from: data)
+                } catch {
                     errorMessage = error.localizedDescription
-                    print("❌ fetchProducts failed: \(error.localizedDescription)")
+                    print("❌ Failed to decode products: \(error)")
                 }
             }
         }
@@ -88,16 +98,23 @@ struct ProductListView: View {
     private func addToCart(_ product: Product) {
         let apiUrl = "https://retail.queue-it-demo.com/api/\(product.product_id).json?"
 
-        queueManager.makeProtectedRequest(to: apiUrl) { result in
-            switch result {
-            case .success:
-                print("✅ Add to cart success for \(product.name)")
-                DispatchQueue.main.async {
-                    cartItems.append(product)
-                    addedProducts.insert(product.id)
+        Task {
+            let response = await fetchDataService.fetchDataRequest(apiUrl)
+
+            await MainActor.run {
+                if response.connectorResponse != nil {
+                    queueManager.activateWaitingRoom()
+                    return
                 }
-            case .failure(let error):
-                print("❌ Add to cart failed: \(error.localizedDescription)")
+
+                guard response.originServerResponse != nil else {
+                    print("❌ Add to cart failed: empty response")
+                    return
+                }
+
+                print("✅ Add to cart success for \(product.name)")
+                cartItems.append(product)
+                addedProducts.insert(product.id)
             }
         }
     }

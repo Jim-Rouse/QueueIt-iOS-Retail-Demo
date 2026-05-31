@@ -53,18 +53,21 @@ class ConnectorApiService {
     
     func addQueueItRequestHeader(_ headerCollection: IRequestHeaderCollection, requestUrl: String) {
         headerCollection.addRequestHeader(QUEUEIT_REQUEST_HEADER_KEY, requestUrl)
-        
+        QLog("📤 Added request header \(QUEUEIT_REQUEST_HEADER_KEY): \(requestUrl)")
+
         if let qtoken = sharedPreferences.getValue(UtilConstants.QUEUE_IT_TOKEN),
            !isNullOrEmpty(qtoken) {
             QLog("Q-token from shared prefs: \(qtoken)")
             headerCollection.addRequestHeader(QUEUEIT_TOKEN_REQUEST_HEADER_KEY, qtoken)
+            QLog("📤 Added \(QUEUEIT_TOKEN_REQUEST_HEADER_KEY)")
             sharedPreferences.saveData(UtilConstants.QUEUE_IT_TOKEN, value: nil)
         }
-        
+
         if let cookies = sharedPreferences.getValue(UtilConstants.COOKIES),
            !isNullOrEmpty(cookies) {
             QLog("Cookies from shared prefs: \(cookies)")
             headerCollection.addRequestHeader("Cookie", cookies)
+            QLog("📤 Added Cookie header")
         }
     }
     

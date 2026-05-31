@@ -2,8 +2,6 @@
 //  QueueManager.swift
 //  QueueItRetailDemo
 //
-//  Created by James Rouse on 2/26/26.
-//
 
 import SwiftUI
 import Combine
@@ -85,85 +83,6 @@ class QueueManager: ObservableObject, QueueListener {
                 await engine.run()
             }
         }
-    }
-
-    // MARK: - Protected Request
-    func makeProtectedRequest(to urlString: String, completion: @escaping (Result<Data, Error>) -> Void) {
-        logger.info("🌐 [PROTECTED REQUEST] → \(urlString)")
-
-        guard let url = URL(string: urlString) else {
-            logger.error("❌ Invalid URL: \(urlString)")
-            completion(.failure(NSError(domain: "Invalid URL", code: 0)))
-            return
-        }
-
-        var request = URLRequest(url: url)
-
-        // Queue-it headers
-        request.addValue(url.absoluteString, forHTTPHeaderField: "x-queueit-ajaxpageurl")
-        logger.info("📤 Added request header x-queueit-ajaxpageurl: \(url.absoluteString)")
-
-        if let cookieHeader = CookieManager.shared.cookieHeaderValue() {
-            request.addValue(cookieHeader, forHTTPHeaderField: "Cookie")
-            logger.info("📤 Added Cookie header")
-        }
-
-        if let queueItToken = UserDefaults.standard.string(forKey: "queueItToken") {
-            request.addValue(queueItToken, forHTTPHeaderField: "x-queueittoken")
-            logger.info("📤 Added x-queueittoken")
-            UserDefaults.standard.removeObject(forKey: "queueItToken")
-        }
-
-        logger.info("📤 Final request headers being sent: \(request.allHTTPHeaderFields ?? [:])")
-        logger.info("📤 Request URL: \(request.url?.absoluteString ?? "nil")  Method: \(request.httpMethod ?? "nil")")
-
-        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-            guard let self = self else { return }
-
-            if let error = error {
-                logger.error("❌ Request failed: \(error.localizedDescription)")
-                completion(.failure(error))
-                return
-            }
-
-            guard let data = data, let httpResponse = response as? HTTPURLResponse else {
-                logger.error("❌ Invalid or nil response")
-                completion(.failure(NSError(domain: "Invalid response", code: 0)))
-                return
-            }
-
-            logger.info("📥 [RESPONSE] Status: \(httpResponse.statusCode)")
-            // Log ALL response headers
-            logger.info("🔍 All Response Headers:")
-
-            if httpResponse.allHeaderFields.isEmpty {
-                logger.info(" (No headers found)")
-            } else {
-                // Sort them alphabetically so it's easier to read
-                let sortedHeaders = httpResponse.allHeaderFields.sorted {
-                    String(describing: $0.key).lowercased() < String(describing: $1.key).lowercased()
-                }
-                
-                for (key, value) in sortedHeaders {
-                    if let k = key as? String {
-                        let safeValue = String(describing: value)
-                        logger.info(" 🔑 \(k): \(safeValue)")
-                    }
-                }
-            }
-
-            // Process cookies
-            CookieManager.shared.processResponseCookies(from: httpResponse, requestURL: url)
-
-            // Check for redirect
-            if let redirect = httpResponse.value(forHTTPHeaderField: "x-queueit-redirect") {
-                logger.info("🔀 x-queueit-redirect detected: \(redirect)")
-                // Add your redirect handling here
-            } else {
-                logger.info("✅ Request succeeded")
-                completion(.success(data))
-            }
-        }.resume()
     }
 
     // MARK: - QueueListener
