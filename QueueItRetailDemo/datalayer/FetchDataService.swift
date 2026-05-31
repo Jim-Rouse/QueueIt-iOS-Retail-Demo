@@ -62,7 +62,7 @@ class FetchDataService {
                 }
             }
 
-            if connectorApiService.doRedirect(httpResponse.allHeaderFields) {
+            if connectorApiService.doRedirect(httpResponse) {
                 QLog("🔀 x-queueit-redirect detected")
                 return FetchResponseModel(originResponse: nil, connectorResponse: connectorApiService.getQueueItConnectorResponse())
             }

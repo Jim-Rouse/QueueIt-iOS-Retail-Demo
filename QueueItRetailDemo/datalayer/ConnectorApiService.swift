@@ -22,26 +22,25 @@ class ConnectorApiService {
         self.sharedPreferences = sharedPreferencesService
     }
     
-    func doRedirect(_ responseHeaders: [AnyHashable: Any]) -> Bool {
-        persistCookie(responseHeaders)
-        return foundRedirectUrl(responseHeaders)
+    func doRedirect(_ httpResponse: HTTPURLResponse) -> Bool {
+        persistCookie(httpResponse)
+        return foundRedirectUrl(httpResponse)
     }
-    
-    private func persistCookie(_ responseHeaders: [AnyHashable: Any]) {
-        if let cookieList = responseHeaders["Set-Cookie"] as? [String], !cookieList.isEmpty {
-            let cookieString = cookieList.joined(separator: "; ")
+
+    private func persistCookie(_ httpResponse: HTTPURLResponse) {
+        if let cookieString = httpResponse.value(forHTTPHeaderField: "Set-Cookie"),
+           !isNullOrEmpty(cookieString) {
             sharedPreferences.saveData(UtilConstants.COOKIES, value: cookieString)
             QLog("Updated Cookies → \(cookieString)")
         }
     }
-    
-    private func foundRedirectUrl(_ responseHeaders: [AnyHashable: Any]) -> Bool {
-        guard let redirectValues = responseHeaders[QUEUEIT_RESPONSE_HEADER_KEY] as? [String],
-              let redirectUrl = redirectValues.first,
+
+    private func foundRedirectUrl(_ httpResponse: HTTPURLResponse) -> Bool {
+        guard let redirectUrl = httpResponse.value(forHTTPHeaderField: QUEUEIT_RESPONSE_HEADER_KEY),
               !isNullOrEmpty(redirectUrl) else {
             return false
         }
-        
+
         QLog("\(QUEUEIT_RESPONSE_HEADER_KEY) populated → \(redirectUrl)")
         _connectorResponse = ConnectorResponseModel(queueItRedirectUrl: redirectUrl)
         return true
